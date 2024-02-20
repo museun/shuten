@@ -15,6 +15,7 @@ use crate::geom::{vec2, Pos2, Rect};
 /// - and a [`Guard`] that restores the terminal when dropped
 pub fn setup(config: Config) -> std::io::Result<(Rect, std::io::Stdout, Guard)> {
     crossterm::terminal::enable_raw_mode()?;
+
     let mut out = std::io::stdout();
     if config.use_alt_screen {
         out.write_all(b"\x1b[?1049h")?;
@@ -25,8 +26,9 @@ pub fn setup(config: Config) -> std::io::Result<(Rect, std::io::Stdout, Guard)> 
         out.write_all(b"\x1b[?25l")?;
     }
     if config.mouse_capture {
-        out.write_all(b"\x1b[?1000h\x1b[?1002h\x1b[?1003h\x1b[?1015h\x1b[?1006h")?;
+        crossterm::queue!(&mut out, crossterm::event::EnableMouseCapture)?;
     }
+    out.flush()?;
 
     let (w, h) = crossterm::terminal::size()?;
     let rect = Rect::from_min_size(Pos2::ZERO, vec2(w, h));
@@ -49,6 +51,7 @@ pub fn reset(config: Config) -> std::io::Result<()> {
     if config.mouse_capture {
         out.write_all(b"\x1b[?1006l\x1b[?1015l\x1b[?1003l\x1b[?1002l\x1b[?1000l")?;
     }
+    out.flush()?;
 
     crossterm::terminal::disable_raw_mode()
 }
@@ -67,5 +70,27 @@ pub struct Guard(Config);
 impl Drop for Guard {
     fn drop(&mut self) {
         let _ = reset(self.0);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::{event::Event, Terminal};
+
+    use super::*;
+
+    #[test]
+    fn asdf() -> std::io::Result<()> {
+        let mut terminal = Terminal::new(Config::default())?;
+        while let Ok(ev) = terminal.wait_for_next_event() {
+            if ev.is_quit() {
+                break;
+            }
+            if let Event::Mouse(ev, ..) = ev {
+                println!("{ev:?}");
+            }
+        }
+
+        Ok(())
     }
 }
