@@ -1,0 +1,12 @@
+[package]
+name = "shuten_core"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+# TODO get rid of this (we only need event parsing now)
+crossterm = { version = "0.27.0", default-features = false, features = [ "events", "windows" ] }
+unicode-segmentation = "1.11.0"
+unicode-width = "0.1.11"

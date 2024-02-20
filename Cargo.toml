@@ -1,0 +1,3 @@
+[workspace]
+members = [ "crates/shuten_core" ]
+resolver = "2"
