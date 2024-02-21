@@ -117,7 +117,7 @@ impl Rect {
 
         let dx = distance(self.min.x as f32, self.max.x as f32, pos.x as f32);
         let dy = distance(self.min.y as f32, self.max.y as f32, pos.y as f32);
-        dx * dx + dy * dy
+        dx.mul_add(dx, dy * dy)
     }
 
     /// Get the size of the rectangle
@@ -192,8 +192,8 @@ impl Rect {
     }
 
     /// Does this rectangle intersect with the other rectangle?
-    pub fn intersects(&self, other: Self) -> bool {
-        self.min.x <= other.min.x
+    pub const fn intersects(&self, other: Self) -> bool {
+        self.min.x <= other.max.x
             && other.min.x <= self.max.x
             && self.min.y <= other.max.y
             && other.min.y <= self.max.y

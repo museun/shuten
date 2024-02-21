@@ -47,14 +47,14 @@ impl Hsl {
     /// Darken this HSL by `ratio` (range `0.0 ..= 1.0`)
     pub fn darken(&self, ratio: f32) -> Self {
         let Self(h, s, mut l) = *self;
-        l = (l - ratio).max(0.0).min(1.0);
+        l = (l - ratio).clamp(0.0, 1.0);
         Self::new(h, s, l)
     }
 
     /// Lighten this HSL by `ratio` (range `0.0 ..= 1.0`)
     pub fn lighten(&self, ratio: f32) -> Self {
         let Self(h, s, mut l) = *self;
-        l = (l + ratio).max(0.0).min(1.0);
+        l = (l + ratio).clamp(0.0, 1.0);
         Self::new(h, s, l)
     }
 

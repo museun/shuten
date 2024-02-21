@@ -106,7 +106,6 @@ impl Context {
             }
 
             wrote_reset = false;
-
             out.write(change.char)?;
         }
 

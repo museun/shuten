@@ -49,7 +49,7 @@ impl Pos2 {
     pub fn distance_sq(self, other: Self) -> f32 {
         let x = self.x as f32 - other.x as f32;
         let y = self.y as f32 - other.y as f32;
-        x * x + y * y
+        x.mul_add(x, y * y)
     }
 
     /// Clamp this point to a min, max set

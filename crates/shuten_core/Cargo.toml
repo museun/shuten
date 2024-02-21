@@ -10,3 +10,6 @@ edition = "2021"
 crossterm = { version = "0.27.0", default-features = false, features = [ "events", "windows" ] }
 unicode-segmentation = "1.11.0"
 unicode-width = "0.1.11"
+
+[dev-dependencies]
+fastrand = "2.0.1"

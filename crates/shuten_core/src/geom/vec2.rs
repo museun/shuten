@@ -48,7 +48,7 @@ impl Vec2 {
     /// Get the length of this vector, squared
     pub fn length_sq(self) -> f32 {
         let (x, y) = (self.x as f32, self.y as f32);
-        x * x + y * y
+        x.mul_add(x, y * y)
     }
 
     /// Swap the components in this vector

@@ -153,9 +153,9 @@ impl Rgb {
         let [r2, g2, b2] = other.as_float();
 
         Self::from_float([
-            r1 + ((r2 - r1) * mix),
-            g1 + ((g2 - g1) * mix),
-            b1 + ((b2 - b1) * mix),
+            (r2 - r1).mul_add(mix, r1),
+            (g2 - g1).mul_add(mix, g1),
+            (b2 - b1).mul_add(mix, b1),
         ])
     }
 
