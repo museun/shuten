@@ -11,6 +11,15 @@ pub use vec2::{vec2, Vec2};
 mod rect;
 pub use rect::{rect, Rect};
 
+mod pos2f;
+pub use pos2f::{pos2f, Pos2f};
+
+mod vec2f;
+pub use vec2f::{vec2f, Vec2f};
+
+mod rectf;
+pub use rectf::Rectf;
+
 mod offset;
 pub use offset::{offset, Offset};
 
@@ -20,10 +29,22 @@ pub use align::{Align, Align2};
 mod margin;
 pub use margin::Margin;
 
+mod constraints;
+pub use constraints::Constraints;
+
+mod flex;
+pub use flex::{
+    CrossAxisAlignment, FlexFit, Flow, MainAxisAlignItems, MainAxisAlignment, MainAxisSize,
+};
+
+mod dimension;
+pub use dimension::{Dimension, Dimension2};
+
 /// How should a [`Rect`] be resized?
 ///
 /// You'll add/subtract this type to a [`Rect`]
 #[derive(Copy, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[cfg_attr(feature = "serde", derive(::serde::Serialize, ::serde::Deserialize))]
 pub enum ResizeDelta {
     Left(u16),
     Right(u16),

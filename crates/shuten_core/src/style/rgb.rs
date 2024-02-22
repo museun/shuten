@@ -1,7 +1,10 @@
+use std::str::FromStr;
+
 use super::Hsl;
 
 /// The main color type
 #[derive(Copy, Clone, Default, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(::serde::Serialize, ::serde::Deserialize))]
 pub struct Rgb(
     /// The red channel
     pub u8,
@@ -20,7 +23,7 @@ impl From<u32> for Rgb {
 impl std::fmt::Debug for Rgb {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let Self(r, g, b) = self;
-        write!(f, "rgb({r},{g},{b})")
+        write!(f, "rgb({r}, {g}, {b})")
     }
 }
 
@@ -233,9 +236,10 @@ impl From<Hsl> for Rgb {
         let q = if l < 0.5 {
             l * (1.0 + s)
         } else {
-            s.mul_add(-l, l + s)
+            l + s - (s * l)
         };
-        let p = 2.0f32.mul_add(l, -q);
+
+        let p = 2.0 * l - q;
 
         let r = hue(p, q, h + (1.0 / 3.0));
         let g = hue(p, q, h);
@@ -245,14 +249,50 @@ impl From<Hsl> for Rgb {
     }
 }
 
-fn hue(p: f32, q: f32, t: f32) -> f32 {
-    let t = (t + 1.0) % 1.0;
-    match () {
-        _ if 6.0 * t < 1.0 => ((q - p) * 6.0).mul_add(t, p).clamp(0.0, 1.0),
-        _ if 2.0 * t < 1.0 => q,
-        _ if 3.0 * t < 1.0 => ((q - p) * ((2.0 / 3.0) - t))
-            .mul_add(6.0, p)
-            .clamp(0.0, 1.0),
-        _ => p,
+fn hue(p: f32, q: f32, mut t: f32) -> f32 {
+    if t < 0.0 {
+        t += 1.0
+    }
+    if t > 1.0 {
+        t -= 1.0;
+    }
+    if 6.0 * t < 1.0 {
+        ((p + (q - p)) * 6.0 * t).clamp(0.0, 1.0)
+    } else if 2.0 * t < 1.0 {
+        q
+    } else if 3.0 * t < 2.0 {
+        (p + (q - p) * ((2.0 / 3.0) - t) * 6.0).clamp(0.0, 1.0)
+    } else {
+        p
+    }
+}
+
+impl FromStr for Rgb {
+    type Err = &'static str;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        if let Some(s) = s.strip_prefix('#') {
+            let digits = u16::from_str_radix(s, 16).map_err(|_| "invalid hex digits")?;
+            return match s.len() {
+                3 => Ok(Self::from_u16(digits)),
+                6 => Ok(Self::from_u16(digits)),
+                _ => Err("invalid hex-string, should be #rrggbb or #rgb"),
+            };
+        }
+
+        if s.starts_with("rgb(") && s.ends_with(')') {
+            let s = &s[4..s.len() - 1];
+            let mut iter = s.split_terminator(',').flat_map(|s| s.trim().parse().ok());
+            let r = iter.next().ok_or("invalid red channel")?;
+            let g = iter.next().ok_or("invalid green channel")?;
+            let b = iter.next().ok_or("invalid blue channel")?;
+
+            if iter.next().is_some() {
+                return Err("rgb(r,g,b) must be a triplet");
+            }
+            return Ok(Self::new(r, g, b));
+        }
+
+        Err("an rgb color must be in the form of rgb(r,g,b) or #rrggbb or #rgb")
     }
 }

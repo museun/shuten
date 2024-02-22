@@ -6,6 +6,7 @@ use super::{lerp, pos2, vec2, Offset, Pos2, ResizeDelta, Vec2};
 ///
 /// This is composed of a `min` point (the _left-top_) and a `max` point (the _right-bottom_)
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(::serde::Serialize, ::serde::Deserialize))]
 pub struct Rect {
     pub min: Pos2,
     pub max: Pos2,

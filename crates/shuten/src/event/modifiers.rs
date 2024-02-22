@@ -1,6 +1,28 @@
 /// Key modifiers attached to an [`Event`](crate::event::Event)
 #[derive(Copy, Clone, PartialEq, PartialOrd, Eq, Ord, Hash)]
-pub struct Modifiers(u8);
+pub struct Modifiers(pub u8);
+
+#[cfg(feature = "serde")]
+impl serde::Serialize for Modifiers {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        serializer.serialize_str(&format!("{self:?}"))
+    }
+}
+
+#[cfg(feature = "serde")]
+impl<'de> serde::Deserialize<'de> for Modifiers {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        use serde::de::Error as _;
+        <std::borrow::Cow<'_, str>>::deserialize(deserializer)
+            .and_then(|data| data.parse().map_err(D::Error::custom))
+    }
+}
 
 impl std::fmt::Debug for Modifiers {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {

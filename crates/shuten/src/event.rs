@@ -1,5 +1,5 @@
 //! Events produced by a [`Terminal`](crate::Terminal)
-use crate::geom::{Pos2, Rect};
+use shuten_core::geom::{Pos2, Rect};
 
 mod key;
 pub use key::Key;
@@ -13,6 +13,7 @@ pub use modifiers::Modifiers;
 
 /// Events produced by a [`Terminal`](crate::Terminal)
 #[derive(Debug, Copy, Clone)]
+#[cfg_attr(feature = "serde", derive(::serde::Serialize, ::serde::Deserialize))]
 #[non_exhaustive]
 pub enum Event {
     /// A resize event happened, giving you the new screen [`Rect`]

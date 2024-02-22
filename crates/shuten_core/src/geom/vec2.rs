@@ -2,6 +2,7 @@ use super::{offset, pos2, Offset, Pos2};
 
 /// A two dimensional vector
 #[derive(Copy, Clone, Default, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[cfg_attr(feature = "serde", derive(::serde::Serialize, ::serde::Deserialize))]
 pub struct Vec2 {
     pub x: u16,
     pub y: u16,
@@ -10,7 +11,7 @@ pub struct Vec2 {
 impl std::fmt::Debug for Vec2 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let Self { x, y } = self;
-        write!(f, "{{{x:?},{y:?}}}")
+        write!(f, "{{{x:?}, {y:?}}}")
     }
 }
 

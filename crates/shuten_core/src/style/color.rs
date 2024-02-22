@@ -4,6 +4,7 @@ use super::Rgb;
 ///
 /// Hint: You'd generally use `rgb.into()` or similar
 #[derive(Copy, Clone, Default, Debug, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(::serde::Serialize, ::serde::Deserialize))]
 pub enum Color {
     /// Use an [`Rgb`] color
     Rgb(Rgb),

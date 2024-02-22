@@ -1,8 +1,9 @@
-use crate::geom::{pos2, Offset, Pos2, Rect};
+use shuten_core::geom::{pos2, Offset, Pos2, Rect};
 
 /// Events produced when ***mouse capture*** is enabled
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 #[non_exhaustive]
+#[cfg_attr(feature = "serde", derive(::serde::Serialize, ::serde::Deserialize))]
 pub enum MouseEvent {
     /// The mouse was moved
     Move {
@@ -113,6 +114,7 @@ impl MouseEvent {
 /// Mouse buttons during a [`MouseEvent`]
 #[derive(Copy, Clone, Default, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[non_exhaustive]
+#[cfg_attr(feature = "serde", derive(::serde::Serialize, ::serde::Deserialize))]
 pub enum MouseButton {
     #[default]
     /// The primary mouse button, generally the left-button

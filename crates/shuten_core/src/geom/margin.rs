@@ -2,6 +2,7 @@ use super::{vec2, Rect, Vec2};
 
 /// A margin is an inset of a rectangle
 #[derive(Copy, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[cfg_attr(feature = "serde", derive(::serde::Serialize, ::serde::Deserialize))]
 pub struct Margin {
     pub left: u16,
     pub top: u16,

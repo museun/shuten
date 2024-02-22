@@ -2,6 +2,28 @@
 #[derive(Copy, Clone, Default, PartialEq, Eq)]
 pub struct Attribute(pub u8);
 
+#[cfg(feature = "serde")]
+impl serde::Serialize for Attribute {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        serializer.serialize_str(&format!("{self:?}"))
+    }
+}
+
+#[cfg(feature = "serde")]
+impl<'de> serde::Deserialize<'de> for Attribute {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        use serde::de::Error as _;
+        <std::borrow::Cow<'_, str>>::deserialize(deserializer)
+            .and_then(|data| data.parse().map_err(D::Error::custom))
+    }
+}
+
 impl Attribute {
     pub const BOLD: Self = Self(0b00000001);
     pub const FAINT: Self = Self(0b00000010);

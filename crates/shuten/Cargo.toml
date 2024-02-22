@@ -1,0 +1,13 @@
+[package]
+name = "shuten"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+shuten_core = { path = "../shuten_core" }
+crossterm = { version = "0.27.0", features = [ "windows", "events" ] }
+
+serde = { version = "1.0.197", features = [ "derive" ], optional = true }
+
+[features]
+serde = [ "dep:serde", "shuten_core/serde" ]

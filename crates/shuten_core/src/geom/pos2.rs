@@ -5,8 +5,9 @@ pub const fn pos2(x: u16, y: u16) -> Pos2 {
     Pos2 { x, y }
 }
 
-/// A two-dimensional position
+/// A two dimensional position
 #[derive(Copy, Clone, Default, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[cfg_attr(feature = "serde", derive(::serde::Serialize, ::serde::Deserialize))]
 pub struct Pos2 {
     pub x: u16,
     pub y: u16,
@@ -15,7 +16,7 @@ pub struct Pos2 {
 impl std::fmt::Debug for Pos2 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let Self { x, y } = self;
-        write!(f, "[{x:?},{y:?}]")
+        write!(f, "[{x:?}, {y:?}]")
     }
 }
 

@@ -9,6 +9,7 @@
 /// assert_eq!(new, Rect::from_min_size(pos2(9, 7), vec2(3, 3)))
 /// ```
 #[derive(Copy, Clone, Default, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[cfg_attr(feature = "serde", derive(::serde::Serialize, ::serde::Deserialize))]
 pub struct Offset {
     pub x: i32,
     pub y: i32,
@@ -16,7 +17,7 @@ pub struct Offset {
 
 impl std::fmt::Debug for Offset {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "({x},{y})", x = self.x, y = self.y)
+        write!(f, "({x}, {y})", x = self.x, y = self.y)
     }
 }
 

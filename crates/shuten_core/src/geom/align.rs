@@ -4,6 +4,7 @@ use super::{pos2, Pos2, Rect, Vec2};
 
 /// Alignment
 #[derive(Copy, Clone, Default, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[cfg_attr(feature = "serde", derive(::serde::Serialize, ::serde::Deserialize))]
 pub enum Align {
     #[default]
     /// Min (Left, or Top)
@@ -50,6 +51,7 @@ impl Align {
 
 /// Two dimensional alignment
 #[derive(Copy, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[cfg_attr(feature = "serde", derive(::serde::Serialize, ::serde::Deserialize))]
 pub struct Align2 {
     /// Horizontal
     pub x: Align,

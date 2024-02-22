@@ -2,6 +2,7 @@ use super::Rgb;
 
 /// HSL color type, this is only provided to convert to an [`Rgb`]
 #[derive(Copy, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(::serde::Serialize, ::serde::Deserialize))]
 pub struct Hsl(
     /// hue
     pub f32,
@@ -14,7 +15,12 @@ pub struct Hsl(
 impl std::fmt::Debug for Hsl {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let Self(h, s, l) = self;
-        write!(f, "hsl({h:.02}%,{s:.02}%,{l:.02}%)",)
+        write!(
+            f,
+            "hsl({h:.02}, {s:.02}%, {l:.02}%)",
+            s = s * 100.0,
+            l = l * 100.0
+        )
     }
 }
 
@@ -127,16 +133,55 @@ impl From<&Rgb> for Hsl {
     }
 }
 
-impl From<Rgb> for crossterm::style::Color {
-    #[inline(always)]
-    fn from(Rgb(r, g, b): Rgb) -> Self {
-        Self::Rgb { r, g, b }
-    }
-}
+impl std::str::FromStr for Hsl {
+    type Err = &'static str;
+    fn from_str(input: &str) -> Result<Self, Self::Err> {
+        let Some(data) = input.strip_prefix("hsl(").and_then(|s| s.strip_suffix(')')) else {
+            return Err("hsl should be hsl(degrees, saturation%, lightness%)");
+        };
 
-impl From<Hsl> for crossterm::style::Color {
-    #[inline(always)]
-    fn from(hsl: Hsl) -> Self {
-        Rgb::from(hsl).into()
+        #[derive(Debug)]
+        enum Ratio {
+            Absolute(f32),
+            Percent(f32),
+        }
+        impl std::str::FromStr for Ratio {
+            type Err = &'static str;
+            fn from_str(s: &str) -> Result<Self, Self::Err> {
+                if let Some(s) = s.strip_suffix('%') {
+                    return s.parse().map_err(|_| "invalid numeric").map(Self::Percent);
+                }
+                s.parse().map_err(|_| "invalid numeric").map(Self::Absolute)
+            }
+        }
+
+        let mut iter = data
+            .split_terminator(',')
+            .flat_map(|s| s.trim().parse().ok());
+
+        let h = iter.next().ok_or("missing hue channel")?;
+        let s = iter.next().ok_or("missing saturation channel")?;
+        let l = iter.next().ok_or("missing lightness channel")?;
+
+        let h = match h {
+            Ratio::Absolute(h) if (0.0..=360.0).contains(&h) => h,
+            _ => return Err("hue must be in degrees"),
+        };
+
+        let s = match s {
+            Ratio::Percent(s) if (0.0..=100.0).contains(&h) => s,
+            _ => return Err("saturation must be a percentage"),
+        };
+
+        let l = match l {
+            Ratio::Percent(l) if (0.0..=100.0).contains(&h) => l,
+            _ => return Err("lightness must be a percentage"),
+        };
+
+        if iter.next().is_some() {
+            return Err("only HSL is supported, not HSLA");
+        }
+
+        Ok(Self::new(h, s, l))
     }
 }

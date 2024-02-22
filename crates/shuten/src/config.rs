@@ -1,4 +1,4 @@
-use super::Timer;
+use crate::terminal::Timer;
 
 /// Configuration for a [`Terminal`](crate::Terminal)
 ///
@@ -11,6 +11,7 @@ use super::Timer;
 /// | [use alt screen](Self::use_alt_screen) | `true` |
 /// | [timer](Self::reactive_timer)          | `reactive` |
 #[derive(Copy, Clone, Debug)]
+#[non_exhaustive]
 pub struct Config {
     pub(crate) hide_cursor: bool,
     pub(crate) mouse_capture: bool,

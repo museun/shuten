@@ -9,45 +9,6 @@ use crate::{
 
 struct DebugRenderer(TermRenderer<Vec<u8>>);
 
-#[cfg(test)]
-mod tests {
-    use crate::{
-        geom::{pos2, rect, vec2},
-        Cell,
-    };
-
-    use super::*;
-
-    #[test]
-    fn asdf() {
-        fn my_draw_code(mut canvas: Canvas) {
-            canvas.put(pos2(2, 3), Cell::new('?').fg(0xFF0000));
-            canvas.put(pos2(3, 2), Cell::new('@').bg(0x0000FF));
-        }
-
-        let mut context = Context::new(rect(vec2(10, 5)));
-
-        // returns an error if invalid utf-8 was found
-        let explain = debug_frame(true, &mut context, my_draw_code).unwrap();
-        println!("{explain}"); // show the explaination
-    }
-}
-
-// \u{1b}[?2026h\u{1b}[3;4;H\u{1b}[0m\u{1b}[48;2;0;0;255m@\u{1b}[4;3;H\u{1b}[38;2;255;0;0m?\u{1b}[1;1;H\u{1b}[49m\u{1b}[39m\u{1b}[0m\u{1b}[?2026l
-/*
-?2026h
-3;4;H
-0m
-48;2;0;0;255m@
-4;3;H
-38;2;255;0;0m?
-1;1;H
-49m
-39m
-0m
-?2026l
-*/
-
 /// Show a somewhat readable form of the ansi escape sequences required to update the screen
 ///
 /// See [explain_frame](crate::renderer::help::explain_frame) for an alternative renderer

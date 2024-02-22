@@ -9,45 +9,29 @@ use std::{
 
 use crate::{
     event::{Event, EventKind, Key, Modifiers, MouseState},
+    Config,
+};
+
+use shuten_core::{
     geom::{self, Rect, Vec2},
-    renderer::Renderer,
-    renderer::TermRenderer,
+    renderer::{Renderer, TermRenderer},
+    style::Color,
     Canvas, Context, Surface,
 };
 
-pub use crate::timer::Timer;
+mod timer;
+pub(crate) use timer::{Timer, TimerKind};
 
 pub mod helpers;
-
-mod config;
-pub use config::Config;
 
 /// A terminal abstraction
 ///
 /// This is generally the type you ***want***
 ///
 /// It sets up the terminal, provides a canvas to paint on and multiple ways to wait for events
-///
-/// ## Example
-/// ```rust,no_run
-/// # fn foo() -> std::io::Result<()> {
-///
-/// let mut terminal = shuten_core::Terminal::new(shuten_core::Config::default())?;
-/// while let Ok(event) = terminal.wait_for_next_event() {
-///     // end the loop if the event was a `quit`
-///     if event.is_quit() { break }
-///
-///     // just fill the screen with green
-///     terminal.paint(|mut canvas| {
-///         canvas.fill(0x00FF00);
-///     })?;
-/// }
-/// # Ok(())
-/// # }
-/// ```
 pub struct Terminal {
     context: Context,
-    timer: Timer,
+    timer: timer::Timer,
     config: Config,
     mouse_state: MouseState,
     timer_state: TimerState,
@@ -78,7 +62,7 @@ impl Terminal {
 
     /// Is this [`Terminal`] using a fixed timer?
     pub const fn using_fixed_timer(&self) -> bool {
-        matches!(self.timer, Timer::Fixed(..))
+        matches!(self.timer.kind, TimerKind::Fixed(..))
     }
 
     /// Get the current [`Rect`] for the [`Terminal`]
@@ -167,18 +151,18 @@ impl Terminal {
     /// Wait for the _next_ event
     pub fn wait_for_next_event(&mut self) -> std::io::Result<Event> {
         loop {
-            match &mut self.timer {
-                Timer::Fixed(t) if self.timer_state == TimerState::Between => {
+            match &mut self.timer.kind {
+                TimerKind::Fixed(t) if self.timer_state == TimerState::Between => {
                     if t.consume() {
                         return Ok(Event::Blend(t.delta().as_secs_f32()));
                     }
                     self.timer_state = TimerState::Next;
                 }
-                Timer::Fixed(t) => {
+                TimerKind::Fixed(t) => {
                     t.tick_until_ready();
                     self.timer_state = TimerState::Between
                 }
-                Timer::Reactive if self.timer_state != TimerState::Next => {
+                TimerKind::Reactive if self.timer_state != TimerState::Next => {
                     let elapsed = self.start.elapsed().as_secs_f32();
                     self.start = Instant::now();
                     self.timer_state = TimerState::Next;
@@ -269,7 +253,7 @@ impl Terminal {
     fn translate(
         running: &mut bool,
         mouse_state: &mut MouseState,
-        ctx: &mut crate::Context,
+        ctx: &mut Context,
         config: &Config,
     ) -> std::io::Result<Option<Event>> {
         if !crossterm::event::poll(std::time::Duration::ZERO)? {
@@ -299,7 +283,7 @@ impl Terminal {
             E::Resize(cols, rows) => {
                 ctx.resize(geom::vec2(cols, rows));
                 let rect = ctx.rect();
-                ctx.canvas().fill(crate::style::Color::Reset);
+                ctx.canvas().fill(Color::Reset);
                 return Ok(Some(Event::Invalidate(rect)));
             }
             _ => return Ok(None),
