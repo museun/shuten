@@ -39,20 +39,19 @@ impl Surface {
     /// Generate a diff of two surfaces, yielding the [locations](pos2) and [`Cell`]s that are different
     ///
     /// This mutates the original cell to cache future changes
-    pub fn diff<'a>(&'a mut self, other: &'a Self) -> impl Iterator<Item = (Pos2, Cell)> + '_ {
-        let filter = |(i, (left, right)): (usize, (&mut Cell, Cell))| {
-            if Self::filter_cell(left, &right) {
-                return None;
-            }
-            *left = right;
-            Some((index_to_pos(i, self.size.x), right))
-        };
-
+    pub fn diff<'a>(&'a self, other: &'a Self) -> impl Iterator<Item = (Pos2, Cell)> + '_ {
+        // TODO skip to the first change
+        // TODO stop at the last change
         self.cells
-            .iter_mut()
+            .iter()
             .zip(other.cells.iter().copied())
             .enumerate()
-            .filter_map(filter)
+            .filter_map(|(i, (left, right)): (usize, (&Cell, Cell))| {
+                if Self::filter_cell(left, &right) {
+                    return None;
+                }
+                Some((index_to_pos(i, self.size.x), right))
+            })
     }
 
     fn filter_cell(left: &Cell, right: &Cell) -> bool {
@@ -62,7 +61,6 @@ impl Surface {
         if right.fg != Color::Reuse || right.bg != Color::Reuse {
             return false;
         }
-
         right.fg == left.fg && right.bg == left.bg
     }
 }

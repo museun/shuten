@@ -43,7 +43,7 @@ pub struct Terminal {
 impl Terminal {
     /// Create a new [`Terminal`] with the provided [`Config`]
     pub fn new(config: Config) -> std::io::Result<Self> {
-        let (rect, out, guard) = helpers::setup(config)?;
+        let (rect, out, _guard) = helpers::setup(config)?;
         helpers::install_panic_hook(config);
 
         // this is an average of every cell set to an rgb color, rounded up
@@ -56,7 +56,7 @@ impl Terminal {
             timer_state: TimerState::default(),
             start: Instant::now(),
             config,
-            _guard: guard,
+            _guard,
         })
     }
 
@@ -154,13 +154,14 @@ impl Terminal {
             match &mut self.timer.kind {
                 TimerKind::Fixed(t) if self.timer_state == TimerState::Between => {
                     if t.consume() {
-                        return Ok(Event::Blend(t.delta().as_secs_f32()));
+                        let dt = t.delta().as_secs_f32();
+                        return Ok(Event::Blend(dt));
                     }
                     self.timer_state = TimerState::Next;
                 }
                 TimerKind::Fixed(t) => {
                     t.tick_until_ready();
-                    self.timer_state = TimerState::Between
+                    self.timer_state = TimerState::Between;
                 }
                 TimerKind::Reactive if self.timer_state != TimerState::Next => {
                     let elapsed = self.start.elapsed().as_secs_f32();

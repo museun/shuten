@@ -122,6 +122,9 @@ impl Context {
             out.reset_attr()?;
 
             out.end()?;
+
+            // and swap the buffers
+            std::mem::swap(&mut self.front, &mut self.back);
         }
 
         Ok(())

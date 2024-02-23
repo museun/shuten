@@ -1,5 +1,5 @@
 pub mod geom;
-// pub mod layout;
+pub mod layout;
 pub mod renderer;
 pub mod style;
 

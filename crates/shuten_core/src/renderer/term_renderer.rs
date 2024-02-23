@@ -19,6 +19,10 @@ where
     pub const fn new(writer: W) -> Self {
         Self { out: writer }
     }
+    /// Get the inner writer
+    pub fn inner(&mut self) -> &mut W {
+        &mut self.out
+    }
 }
 
 impl<W> Renderer for TermRenderer<W>
