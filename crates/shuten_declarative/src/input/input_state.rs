@@ -92,7 +92,14 @@ impl Input {
             }
 
             MouseEvent::MouseDragStart { pos, button } => {
-                self.mouse_drag(tree, layout, pos, pos, Vec2f::ZERO, button)
+                let event = Event::MouseDrag {
+                    origin: pos,
+                    pos,
+                    delta: Vec2f::ZERO,
+                    modifiers: self.modifiers,
+                    button,
+                };
+                self.send_mouse_event(tree, layout, &event)
             }
 
             MouseEvent::MouseDrag {
@@ -100,16 +107,41 @@ impl Input {
                 pos,
                 delta,
                 button,
-            } => self.mouse_drag(tree, layout, origin, pos, delta, button),
+            } => {
+                let event = Event::MouseDrag {
+                    origin,
+                    pos,
+                    delta,
+                    modifiers: self.modifiers,
+                    button,
+                };
+                self.send_mouse_event(tree, layout, &event)
+            }
 
             MouseEvent::MouseDragReleased {
                 origin,
                 pos,
                 delta,
                 button,
-            } => self.mouse_drag_release(tree, layout, origin, pos, delta, button),
+            } => {
+                let event = Event::MouseDragRelease {
+                    origin,
+                    pos,
+                    delta,
+                    modifiers: self.modifiers,
+                    button,
+                };
+                self.send_mouse_event(tree, layout, &event)
+            }
 
-            MouseEvent::MouseScroll { delta, pos } => self.mouse_scroll(tree, layout, pos, delta),
+            MouseEvent::MouseScroll { delta, pos } => {
+                let event = Event::MouseScroll {
+                    pos,
+                    delta,
+                    modifiers: self.modifiers,
+                };
+                self.send_mouse_event(tree, layout, &event)
+            }
         }
     }
 
@@ -130,7 +162,13 @@ impl Input {
                     modifiers: self.modifiers,
                 };
                 // TODO this swallows focused events
-                return self.emit(tree, layout, id, &mut node, &event);
+
+                let ctx = EventCtx {
+                    tree,
+                    layout,
+                    input: self,
+                };
+                return Self::emit(ctx, id, &mut node, &event);
             }
         }
 
@@ -145,7 +183,12 @@ impl Input {
                     key,
                     modifiers: self.modifiers,
                 };
-                return self.emit(tree, layout, id, &mut node, &event);
+                let ctx = EventCtx {
+                    tree,
+                    layout,
+                    input: self,
+                };
+                return Self::emit(ctx, id, &mut node, &event);
             }
         }
 
@@ -167,7 +210,12 @@ impl Input {
         for (id, interest) in layout.mouse.iter() {
             if interest.is_mouse_move() {
                 if let Some(mut node) = tree.get_mut(id) {
-                    self.emit(tree, layout, id, &mut node, &event);
+                    let ctx = EventCtx {
+                        tree,
+                        layout,
+                        input: self,
+                    };
+                    Self::emit(ctx, id, &mut node, &event);
                 }
             }
         }
@@ -186,10 +234,12 @@ impl Input {
 
             if !self.intersections.entered.contains(&hit) {
                 self.intersections.entered.push(hit);
-                if self
-                    .emit(tree, layout, hit, &mut node, &Event::MouseEnter)
-                    .is_sink()
-                {
+                let ctx = EventCtx {
+                    tree,
+                    layout,
+                    input: self,
+                };
+                if Self::emit(ctx, hit, &mut node, &Event::MouseEnter).is_sink() {
                     self.intersections.entered_and_sunk.push(hit);
                     break;
                 }
@@ -205,7 +255,12 @@ impl Input {
         for &hit in &self.intersections.entered {
             if !self.intersections.hit.contains(&hit) {
                 if let Some(mut node) = tree.get_mut(hit) {
-                    self.emit(tree, layout, hit, &mut node, &Event::MouseLeave);
+                    let ctx = EventCtx {
+                        tree,
+                        layout,
+                        input: self,
+                    };
+                    Self::emit(ctx, hit, &mut node, &Event::MouseLeave);
                 }
                 inactive.push(hit);
             }
@@ -217,25 +272,9 @@ impl Input {
                 .retain(|&id| id != inactive_id);
         }
     }
+}
 
-    fn hit_test(_tree: &Tree, layout: &Layout, pos: Pos2f, mouse_hit: &mut Vec<WidgetId>) {
-        for (id, _) in layout.mouse.iter() {
-            let Some(mut node) = layout.get(id) else {
-                continue;
-            };
-
-            let mut rect = node.rect;
-            while let Some(parent) = node.clipped_by {
-                node = &layout[parent];
-                rect = rect.constrain(node.rect);
-            }
-
-            if node.rect.contains(pos) {
-                mouse_hit.push(id);
-            }
-        }
-    }
-
+impl Input {
     fn mouse_button_changed(
         &mut self,
         tree: &Tree,
@@ -255,74 +294,42 @@ impl Input {
             (true, false) => *state = ButtonState::Up,
         }
 
-        self.button_change(tree, layout, button, down)
-    }
-
-    fn button_change(
-        &self,
-        tree: &Tree,
-        layout: &Layout,
-        button: MouseButton,
-        down: bool,
-    ) -> Handled {
-        let mut resp = Handled::Bubble;
-
-        for &id in &self.intersections.hit {
-            let Some(mut node) = tree.get_mut(id) else {
-                continue;
-            };
-            let event = if down {
-                Event::MouseHeld {
-                    button,
-                    inside: true,
-                    pos: self.mouse.pos.unwrap(),
-                    modifiers: self.modifiers,
-                }
-            } else {
-                Event::MouseRelease {
-                    button,
-                    inside: true,
-                    pos: self.mouse.pos.unwrap(),
-                    modifiers: self.modifiers,
-                }
-            };
-            if self.emit(tree, layout, id, &mut node, &event) == Handled::Sink {
-                resp = Handled::Sink;
-                break;
+        let event = if down {
+            Event::MouseHeld {
+                button,
+                inside: false,
+                pos: self.mouse.pos.unwrap(),
+                modifiers: self.modifiers,
             }
-        }
+        } else {
+            Event::MouseRelease {
+                button,
+                inside: false,
+                pos: self.mouse.pos.unwrap(),
+                modifiers: self.modifiers,
+            }
+        };
 
+        let resp = self.send_mouse_event(tree, layout, &event);
         for (id, interest) in layout.mouse.iter() {
             if !(interest.is_mouse_outside() && self.intersections.hit.contains(&id)) {
                 continue;
             }
-
             let Some(mut node) = tree.get_mut(id) else {
                 continue;
             };
-            let event = if down {
-                Event::MouseHeld {
-                    button,
-                    inside: false,
-                    pos: self.mouse.pos.unwrap(),
-                    modifiers: self.modifiers,
-                }
-            } else {
-                Event::MouseRelease {
-                    button,
-                    inside: false,
-                    pos: self.mouse.pos.unwrap(),
-                    modifiers: self.modifiers,
-                }
+
+            let ctx = EventCtx {
+                tree,
+                layout,
+                input: self,
             };
-
-            self.emit(tree, layout, id, &mut node, &event);
+            Self::emit(ctx, id, &mut node, &event);
         }
-
         resp
     }
 
-    fn mouse_scroll(&self, tree: &Tree, layout: &Layout, pos: Pos2f, delta: Vec2f) -> Handled {
+    fn send_mouse_event(&self, tree: &Tree, layout: &Layout, event: &Event) -> Handled {
         let mut resp = Handled::Bubble;
 
         for &id in &self.intersections.hit {
@@ -330,73 +337,12 @@ impl Input {
                 continue;
             };
 
-            let event = Event::MouseScroll {
-                pos,
-                delta,
-                modifiers: self.modifiers,
+            let ctx = EventCtx {
+                tree,
+                layout,
+                input: self,
             };
-            if self.emit(tree, layout, id, &mut node, &event).is_sink() {
-                resp = Handled::Sink;
-                break;
-            }
-        }
-
-        resp
-    }
-
-    fn mouse_drag(
-        &self,
-        tree: &Tree,
-        layout: &Layout,
-        origin: Pos2f,
-        pos: Pos2f,
-        delta: Vec2f,
-        button: MouseButton,
-    ) -> Handled {
-        let mut resp = Handled::Bubble;
-        for &id in &self.intersections.hit {
-            let Some(mut node) = tree.get_mut(id) else {
-                continue;
-            };
-            let event = Event::MouseDrag {
-                origin,
-                pos,
-                delta,
-                modifiers: self.modifiers,
-                button,
-            };
-            if self.emit(tree, layout, id, &mut node, &event).is_sink() {
-                resp = Handled::Sink;
-                break;
-            }
-        }
-
-        resp
-    }
-
-    fn mouse_drag_release(
-        &self,
-        tree: &Tree,
-        layout: &Layout,
-        origin: Pos2f,
-        pos: Pos2f,
-        delta: Vec2f,
-        button: MouseButton,
-    ) -> Handled {
-        let mut resp = Handled::Bubble;
-        for &id in &self.intersections.hit {
-            let Some(mut node) = tree.get_mut(id) else {
-                continue;
-            };
-
-            let event = Event::MouseDragRelease {
-                origin,
-                pos,
-                delta,
-                modifiers: self.modifiers,
-                button,
-            };
-            if self.emit(tree, layout, id, &mut node, &event) == Handled::Sink {
+            if Self::emit(ctx, id, &mut node, event).is_sink() {
                 resp = Handled::Sink;
                 break;
             }
@@ -414,7 +360,12 @@ impl Input {
 
         if let Some(entered) = current {
             if let Some(mut node) = tree.get_mut(entered) {
-                self.emit(tree, layout, entered, &mut node, &Event::FocusGained);
+                let ctx = EventCtx {
+                    tree,
+                    layout,
+                    input: self,
+                };
+                Self::emit(ctx, entered, &mut node, &Event::FocusGained);
             } else {
                 self.selection.set(None);
                 current = None;
@@ -423,30 +374,43 @@ impl Input {
 
         if let Some(exited) = last {
             if let Some(mut node) = tree.get_mut(exited) {
-                self.emit(tree, layout, exited, &mut node, &Event::FocusLost);
+                let ctx = EventCtx {
+                    tree,
+                    layout,
+                    input: self,
+                };
+                Self::emit(ctx, exited, &mut node, &Event::FocusLost);
             }
         }
 
         self.last_selection.set(current)
     }
 
-    fn emit(
-        &self,
-        tree: &Tree,
-        layout: &Layout,
-        id: WidgetId,
-        node: &mut Node,
-        event: &Event,
-    ) -> Handled {
-        let ctx = EventCtx {
-            tree,
-            layout,
-            input: self,
-        };
-
+    fn emit(ctx: EventCtx, id: WidgetId, node: &mut Node, event: &Event) -> Handled {
+        let tree = ctx.tree;
         tree.enter(id);
         let resp = node.widget.event(ctx, event);
         tree.exit(id);
         resp
+    }
+}
+
+impl Input {
+    fn hit_test(_tree: &Tree, layout: &Layout, pos: Pos2f, mouse_hit: &mut Vec<WidgetId>) {
+        for (id, _) in layout.mouse.iter() {
+            let Some(mut node) = layout.get(id) else {
+                continue;
+            };
+
+            let mut rect = node.rect;
+            while let Some(parent) = node.clipped_by {
+                node = &layout[parent];
+                rect = rect.constrain(node.rect);
+            }
+
+            if node.rect.contains(pos) {
+                mouse_hit.push(id);
+            }
+        }
     }
 }
