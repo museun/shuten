@@ -23,9 +23,6 @@ pub enum Event {
     /// A keyboard event happened, giving you the event and any [`Modifiers`]
     Keyboard(Key, Modifiers),
     /// A blend happened, this allows you to interpolate by a `blend factor`
-    ///
-    /// - When using a [fixed-timer](crate::terminal::Timer::fixed), this'll be ratio of time until the next frame
-    /// - When using a [reactive-timer](crate::terminal::Timer::reactive), this'll always be `1.0`
     Blend(f32),
     /// A quit event happened
     Quit,
