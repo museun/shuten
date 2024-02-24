@@ -11,7 +11,7 @@ use crate::{
 pub struct EventCtx<'a> {
     pub tree: &'a Tree,
     pub layout: &'a Layout,
-    pub input: &'a mut Input,
+    pub input: &'a Input,
 }
 
 impl<'a> EventCtx<'a> {
