@@ -25,13 +25,13 @@ impl<'de> serde::Deserialize<'de> for Attribute {
 }
 
 impl Attribute {
-    pub const BOLD: Self = Self(0b00000001);
-    pub const FAINT: Self = Self(0b00000010);
-    pub const ITALIC: Self = Self(0b00000100);
-    pub const UNDERLINE: Self = Self(0b00001000);
-    pub const BLINK: Self = Self(0b00010000);
-    pub const REVERSE: Self = Self(0b00100000);
-    pub const STRIKE_OUT: Self = Self(0b01000000);
+    pub const BOLD: Self = Self(0b0000_0001);
+    pub const FAINT: Self = Self(0b0000_0010);
+    pub const ITALIC: Self = Self(0b0000_0100);
+    pub const UNDERLINE: Self = Self(0b0000_1000);
+    pub const BLINK: Self = Self(0b0001_0000);
+    pub const REVERSE: Self = Self(0b0010_0000);
+    pub const STRIKE_OUT: Self = Self(0b0100_0000);
 }
 
 impl Attribute {

@@ -11,7 +11,7 @@ struct DebugRenderer(TermRenderer<Vec<u8>>);
 
 /// Show a somewhat readable form of the ansi escape sequences required to update the screen
 ///
-/// See [explain_frame](crate::renderer::help::explain_frame) for an alternative renderer
+/// See [`explain_frame`](crate::renderer::help::explain_frame) for an alternative renderer
 ///
 /// Usage:
 /// ```rust,no_run
@@ -81,6 +81,10 @@ impl Renderer for DebugRenderer {
         self.0.end()
     }
 
+    fn clear_screen(&mut self) -> Result<()> {
+        self.0.clear_screen()
+    }
+
     fn move_to(&mut self, pos: Pos2) -> Result<()> {
         self.0.move_to(pos)
     }
@@ -131,5 +135,13 @@ impl Renderer for DebugRenderer {
 
     fn release_mouse(&mut self) -> Result<()> {
         self.0.release_mouse()
+    }
+
+    fn enter_alt_screen(&mut self) -> Result<()> {
+        self.0.enter_alt_screen()
+    }
+
+    fn leave_alt_screen(&mut self) -> Result<()> {
+        self.0.leave_alt_screen()
     }
 }

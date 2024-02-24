@@ -224,6 +224,7 @@ impl From<&Hsl> for Rgb {
 }
 
 impl From<Hsl> for Rgb {
+    #[allow(clippy::many_single_char_names)]
     fn from(value: Hsl) -> Self {
         let Hsl(mut h, s, l) = value;
 
@@ -236,10 +237,10 @@ impl From<Hsl> for Rgb {
         let q = if l < 0.5 {
             l * (1.0 + s)
         } else {
-            l + s - (s * l)
+            s.mul_add(-l, l + s)
         };
 
-        let p = 2.0 * l - q;
+        let p = 2.0f32.mul_add(l, -q);
 
         let r = hue(p, q, h + (1.0 / 3.0));
         let g = hue(p, q, h);
@@ -261,7 +262,9 @@ fn hue(p: f32, q: f32, mut t: f32) -> f32 {
     } else if 2.0 * t < 1.0 {
         q
     } else if 3.0 * t < 2.0 {
-        (p + (q - p) * ((2.0 / 3.0) - t) * 6.0).clamp(0.0, 1.0)
+        ((q - p) * ((2.0 / 3.0) - t))
+            .mul_add(6.0, p)
+            .clamp(0.0, 1.0)
     } else {
         p
     }
@@ -282,17 +285,16 @@ impl FromStr for Rgb {
 
         if s.starts_with("rgb(") && s.ends_with(')') {
             let s = &s[4..s.len() - 1];
-            let mut iter = s.split_terminator(',').flat_map(|s| s.trim().parse().ok());
+            let mut iter = s.split_terminator(',').flat_map(|s| s.trim().parse());
             let r = iter.next().ok_or("invalid red channel")?;
             let g = iter.next().ok_or("invalid green channel")?;
             let b = iter.next().ok_or("invalid blue channel")?;
-
             if iter.next().is_some() {
                 return Err("rgb(r,g,b) must be a triplet");
             }
             return Ok(Self::new(r, g, b));
         }
 
-        Err("an rgb color must be in the form of rgb(r,g,b) or #rrggbb or #rgb")
+        Err("rgb color must be in the form of rgb(r,g,b) or #rrggbb or #rgb")
     }
 }

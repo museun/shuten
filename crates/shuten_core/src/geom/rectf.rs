@@ -12,6 +12,12 @@ pub struct Rectf {
     pub max: Pos2f,
 }
 
+impl Default for Rectf {
+    fn default() -> Self {
+        Self::ZERO
+    }
+}
+
 impl Rectf {
     pub const ZERO: Self = Self {
         min: Pos2f::ZERO,

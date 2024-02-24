@@ -38,25 +38,29 @@ where
         self.out.flush()
     }
 
-    #[inline(always)]
+    fn clear_screen(&mut self) -> std::io::Result<()> {
+        self.out.write_all(b"\x1b[?2J")
+    }
+
+    #[inline]
     fn move_to(&mut self, pos: Pos2) -> std::io::Result<()> {
         self.out
             .write_fmt(format_args!("\x1b[{y};{x};H", x = pos.x + 1, y = pos.y + 1))
     }
 
-    #[inline(always)]
+    #[inline]
     fn set_fg(&mut self, color: Rgb) -> std::io::Result<()> {
         let Rgb(r, g, b) = color;
         self.out.write_fmt(format_args!("\x1b[38;2;{r};{g};{b}m"))
     }
 
-    #[inline(always)]
+    #[inline]
     fn set_bg(&mut self, color: Rgb) -> std::io::Result<()> {
         let Rgb(r, g, b) = color;
         self.out.write_fmt(format_args!("\x1b[48;2;{r};{g};{b}m"))
     }
 
-    #[inline(always)]
+    #[inline]
     fn set_attr(&mut self, attr: Attribute) -> std::io::Result<()> {
         // TODO make this expansive by iteratirng from the lsb to the msb
         if attr.is_bold() {
@@ -83,22 +87,22 @@ where
         Ok(())
     }
 
-    #[inline(always)]
+    #[inline]
     fn reset_fg(&mut self) -> std::io::Result<()> {
         self.out.write_all(b"\x1b[39m")
     }
 
-    #[inline(always)]
+    #[inline]
     fn reset_bg(&mut self) -> std::io::Result<()> {
         self.out.write_all(b"\x1b[49m")
     }
 
-    #[inline(always)]
+    #[inline]
     fn reset_attr(&mut self) -> std::io::Result<()> {
         self.out.write_all(b"\x1b[0m")
     }
 
-    #[inline(always)]
+    #[inline]
     fn write(&mut self, char: char) -> std::io::Result<()> {
         self.out.write_all(char.encode_utf8(&mut [0; 4]).as_bytes())
     }
@@ -123,5 +127,13 @@ where
     fn release_mouse(&mut self) -> std::io::Result<()> {
         self.out
             .write_all(b"\x1b[?1000l\x1b[?1002l\x1b[?1003l\x1b[?1006l\x1b[?1015l")
+    }
+
+    fn enter_alt_screen(&mut self) -> std::io::Result<()> {
+        self.out.write_all(b"\x1b[?1049h")
+    }
+
+    fn leave_alt_screen(&mut self) -> std::io::Result<()> {
+        self.out.write_all(b"\x1b[?1049l")
     }
 }

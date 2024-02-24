@@ -9,7 +9,7 @@ use crate::{
 
 /// Explain, in a human form, what operations are required to update the screen
 ///
-/// See [debug_frame](crate::renderer::help::debug_frame) for an alternative renderer
+/// See [`debug_frame`](crate::renderer::help::debug_frame) for an alternative renderer
 ///
 /// Usage:
 /// ```rust,no_run
@@ -89,6 +89,10 @@ impl<W: std::io::Write> Renderer for ExplainRenderer<W> {
         writeln!(&mut self.out, "end frame")
     }
 
+    fn clear_screen(&mut self) -> std::io::Result<()> {
+        Ok(())
+    }
+
     fn move_to(&mut self, pos: Pos2) -> std::io::Result<()> {
         self.next_entry()?;
         writeln!(&mut self.out, "  move to {pos:?}")
@@ -154,6 +158,14 @@ impl<W: std::io::Write> Renderer for ExplainRenderer<W> {
     }
 
     fn release_mouse(&mut self) -> std::io::Result<()> {
+        Ok(())
+    }
+
+    fn enter_alt_screen(&mut self) -> std::io::Result<()> {
+        Ok(())
+    }
+
+    fn leave_alt_screen(&mut self) -> std::io::Result<()> {
         Ok(())
     }
 }

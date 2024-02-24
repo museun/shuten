@@ -15,6 +15,12 @@ pub struct Cell {
     pub(crate) attr: CellAttr,
 }
 
+impl Default for Cell {
+    fn default() -> Self {
+        Self::EMPTY
+    }
+}
+
 impl Cell {
     /// Create an `Empty` cell
     pub const EMPTY: Self = Self::new(' ');

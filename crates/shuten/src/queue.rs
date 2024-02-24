@@ -1,6 +1,6 @@
 use std::collections::{vec_deque, VecDeque};
 
-#[derive(Clone, PartialEq, PartialOrd)]
+#[derive(Clone, Debug, PartialEq, PartialOrd, Eq)]
 pub struct Queue<T, const N: usize> {
     queue: VecDeque<T>,
 }

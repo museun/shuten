@@ -20,6 +20,9 @@ pub trait Renderer {
     /// End the current frame
     fn end(&mut self) -> Result<()>;
 
+    /// Clear the current buffer
+    fn clear_screen(&mut self) -> Result<()>;
+
     /// Move the cursor to [`pos`](Pos2)
     fn move_to(&mut self, pos: Pos2) -> Result<()>;
 
@@ -52,6 +55,11 @@ pub trait Renderer {
     fn capture_mouse(&mut self) -> Result<()>;
     /// Release the mouse, suppressing mouse events
     fn release_mouse(&mut self) -> Result<()>;
+
+    /// Enter the alternative screen
+    fn enter_alt_screen(&mut self) -> Result<()>;
+    /// Leave the alternative screen
+    fn leave_alt_screen(&mut self) -> Result<()>;
 }
 
 mod null_renderer;

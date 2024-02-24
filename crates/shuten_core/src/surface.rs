@@ -67,7 +67,7 @@ impl Surface {
 
 impl std::ops::Index<Pos2> for Surface {
     type Output = Cell;
-    #[inline(always)]
+    #[inline]
     /// **NOTE**: this will panic if the [`Pos2`] is out of bounds
     fn index(&self, index: Pos2) -> &Self::Output {
         assert!(
@@ -83,7 +83,7 @@ impl std::ops::Index<Pos2> for Surface {
 }
 
 impl std::ops::IndexMut<Pos2> for Surface {
-    #[inline(always)]
+    #[inline]
     /// **NOTE**: this will panic if the [`Pos2`] is out of bounds
     fn index_mut(&mut self, index: Pos2) -> &mut Self::Output {
         assert!(

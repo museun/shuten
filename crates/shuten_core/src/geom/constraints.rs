@@ -50,7 +50,7 @@ impl Constraints {
         width.max(self.min.x).min(self.max.x)
     }
 
-    /// Get the width closest to the given width that fits the constraints
+    /// Get the height closest to the given width that fits the constraints
     pub fn constrain_height(&self, height: f32) -> f32 {
         height.max(self.min.y).min(self.max.y)
     }

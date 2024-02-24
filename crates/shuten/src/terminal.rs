@@ -9,7 +9,7 @@ use std::{
 
 use crate::{
     event::{Event, EventKind, Key, Modifiers, MouseState},
-    Config,
+    Config, ShareableConfig,
 };
 
 use shuten_core::{
@@ -20,7 +20,7 @@ use shuten_core::{
 };
 
 mod timer;
-pub(crate) use timer::{Timer, TimerKind};
+pub use timer::{Timer, TimerKind};
 
 pub mod helpers;
 
@@ -32,7 +32,7 @@ pub mod helpers;
 pub struct Terminal {
     context: Context,
     timer: timer::Timer,
-    config: Config,
+    config: ShareableConfig,
     mouse_state: MouseState,
     timer_state: TimerState,
     start: Instant,
@@ -43,14 +43,14 @@ pub struct Terminal {
 impl Terminal {
     /// Create a new [`Terminal`] with the provided [`Config`]
     pub fn new(config: Config) -> std::io::Result<Self> {
-        let (rect, out, _guard) = helpers::setup(config)?;
-        helpers::install_panic_hook(config);
+        let (rect, out, _guard, config) = helpers::setup(config)?;
+        helpers::install_panic_hook(config.clone());
 
         // this is an average of every cell set to an rgb color, rounded up
         let capacity = (rect.area() as usize * 21).next_power_of_two();
         Ok(Self {
             context: Context::new(rect),
-            timer: config.timer,
+            timer: config.get(|s| s.timer),
             out: BufWriter::with_capacity(capacity, out),
             mouse_state: MouseState::default(),
             timer_state: TimerState::default(),
@@ -68,6 +68,15 @@ impl Terminal {
     /// Get the current [`Rect`] for the [`Terminal`]
     pub const fn rect(&self) -> Rect {
         self.context.rect()
+    }
+
+    /// Toggle the alternative screen buffer
+    pub fn toggle_alt_screen(&mut self) -> std::io::Result<()> {
+        if self.is_in_alt_screen() {
+            self.leave_alt_screen()
+        } else {
+            self.enter_alt_screen()
+        }
     }
 }
 
@@ -197,6 +206,32 @@ impl Terminal {
         self.immediate(|mut p| p.hide_cursor())
     }
 
+    /// Determines if we're in the alternative screen buffer
+    pub fn is_in_alt_screen(&self) -> bool {
+        self.config.get(|c| c.use_alt_screen)
+    }
+
+    /// Leave the alternative screen, if in it
+    pub fn leave_alt_screen(&self) -> std::io::Result<()> {
+        if self.is_in_alt_screen() {
+            self.config.mutate(|c| c.use_alt_screen = false);
+            self.immediate(|mut p| p.leave_alt_screen())?
+        }
+        Ok(())
+    }
+
+    /// Enter the alternative screen, if not in it
+    pub fn enter_alt_screen(&self) -> std::io::Result<()> {
+        if !self.is_in_alt_screen() {
+            self.config.mutate(|c| c.use_alt_screen = true);
+            self.immediate(|mut p| {
+                p.enter_alt_screen()?;
+                p.clear_screen()
+            })?;
+        }
+        Ok(())
+    }
+
     /// Release the mouse, suppressing [`mouse events`](crate::event::MouseEvent)
     pub fn release_mouse(&self) -> std::io::Result<()> {
         self.immediate(|mut p| p.release_mouse())
@@ -225,14 +260,22 @@ impl Terminal {
 
     fn read_event(&mut self) -> std::io::Result<Option<Event>> {
         let mut running = true;
-        let ev = Self::translate(
-            &mut running,
-            &mut self.mouse_state,
-            &mut self.context,
-            &self.config,
-        )?;
+        let mut switch = false;
+        let ev = self.config.get(|config| {
+            Self::translate(
+                &mut running,
+                &mut switch,
+                &mut self.mouse_state,
+                &mut self.context,
+                config,
+            )
+        })?;
         if let Some(Event::Invalidate(rect)) = ev {
             self.resize(rect.size());
+        }
+
+        if switch != false {
+            self.toggle_alt_screen()?;
         }
 
         if !running {
@@ -253,15 +296,17 @@ impl Terminal {
 
     fn translate(
         running: &mut bool,
+        switch: &mut bool,
         mouse_state: &mut MouseState,
         ctx: &mut Context,
         config: &Config,
     ) -> std::io::Result<Option<Event>> {
+        use crossterm::event::Event as E;
+
         if !crossterm::event::poll(std::time::Duration::ZERO)? {
             return Ok(None);
         }
 
-        use crossterm::event::Event as E;
         let ev = match crossterm::event::read()? {
             E::Key(ev) if ev.kind == crossterm::event::KeyEventKind::Press => {
                 let Ok(key) = ev.code.try_into() else {
@@ -270,6 +315,9 @@ impl Terminal {
                 let modifiers = Modifiers::from(ev.modifiers);
                 if matches!(key, Key::Char('c')) && modifiers.is_ctrl() && config.ctrl_c_quits {
                     *running = false;
+                }
+                if matches!(key, Key::Char('z')) && modifiers.is_ctrl() && config.ctrl_z_switches {
+                    *switch = true;
                 }
                 Event::Keyboard(key, modifiers)
             }

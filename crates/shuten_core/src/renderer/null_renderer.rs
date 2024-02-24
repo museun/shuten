@@ -18,6 +18,10 @@ impl Renderer for NullRenderer {
         Ok(())
     }
 
+    fn clear_screen(&mut self) -> Result<()> {
+        Ok(())
+    }
+
     fn move_to(&mut self, _pos: Pos2) -> Result<()> {
         Ok(())
     }
@@ -67,6 +71,14 @@ impl Renderer for NullRenderer {
     }
 
     fn release_mouse(&mut self) -> Result<()> {
+        Ok(())
+    }
+
+    fn enter_alt_screen(&mut self) -> Result<()> {
+        Ok(())
+    }
+
+    fn leave_alt_screen(&mut self) -> Result<()> {
         Ok(())
     }
 }

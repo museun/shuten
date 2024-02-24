@@ -1,3 +1,5 @@
+use std::sync::{Arc, Mutex};
+
 use crate::terminal::Timer;
 
 /// Configuration for a [`Terminal`](crate::Terminal)
@@ -9,6 +11,7 @@ use crate::terminal::Timer;
 /// | [mouse capture](Self::mouse_capture)  | `true` |
 /// | [ctrl-c quits](Self::ctrl_c_quits)   | `true` |
 /// | [use alt screen](Self::use_alt_screen) | `true` |
+/// | [ctrl z switches](Self::ctrl_z_switches) | `false` |
 /// | [timer](Self::reactive_timer)          | `reactive` |
 #[derive(Copy, Clone, Debug)]
 #[non_exhaustive]
@@ -16,6 +19,7 @@ pub struct Config {
     pub(crate) hide_cursor: bool,
     pub(crate) mouse_capture: bool,
     pub(crate) ctrl_c_quits: bool,
+    pub(crate) ctrl_z_switches: bool,
     pub(crate) use_alt_screen: bool,
     pub(crate) timer: Timer,
 }
@@ -26,6 +30,7 @@ impl Default for Config {
             hide_cursor: true,
             mouse_capture: true,
             ctrl_c_quits: true,
+            ctrl_z_switches: false,
             use_alt_screen: true,
             timer: Timer::default(),
         }
@@ -48,6 +53,12 @@ impl Config {
     /// Should `Ctrl-C` trigger an [`Event::Quit`](crate::event::Event::Quit)
     pub const fn ctrl_c_quits(mut self, ctrl_c_quits: bool) -> Self {
         self.ctrl_c_quits = ctrl_c_quits;
+        self
+    }
+
+    /// Should `Ctrl-z` switch between the alternative buffer screen and the normal screen?
+    pub const fn ctrl_z_switches(mut self, ctrl_z_switches: bool) -> Self {
+        self.ctrl_z_switches = ctrl_z_switches;
         self
     }
 
@@ -78,5 +89,28 @@ impl Config {
     pub const fn reactive_timer(mut self) -> Self {
         self.timer = Timer::reactive();
         self
+    }
+}
+
+#[derive(Clone)]
+pub struct ShareableConfig {
+    inner: Arc<Mutex<Config>>,
+}
+
+impl From<Config> for ShareableConfig {
+    fn from(value: Config) -> Self {
+        Self {
+            inner: Arc::new(Mutex::new(value)),
+        }
+    }
+}
+
+impl ShareableConfig {
+    pub fn mutate(&self, mut f: impl FnMut(&mut Config)) {
+        f(&mut *self.inner.lock().unwrap())
+    }
+
+    pub fn get<T>(&self, mut f: impl FnMut(&Config) -> T) -> T {
+        f(&*self.inner.lock().unwrap())
     }
 }

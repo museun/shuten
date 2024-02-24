@@ -37,7 +37,7 @@ impl Dimension {
 
     /// Resolve the size to a singel value in cells using information from the surrounding context
     pub fn resolve(&self, parent: f32) -> f32 {
-        self.absolute + parent * self.ratio
+        parent.mul_add(self.ratio, self.absolute)
     }
 }
 

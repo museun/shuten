@@ -1,3 +1,5 @@
+use crate::geom::almost_eq;
+
 use super::Rgb;
 
 /// HSL color type, this is only provided to convert to an [`Rgb`]
@@ -98,20 +100,21 @@ impl Hsl {
 }
 
 impl From<Rgb> for Hsl {
+    #[allow(clippy::many_single_char_names)]
     fn from(value: Rgb) -> Self {
         let [r, g, b] = value.as_float();
         let min = r.min(g).min(b);
         let max = r.max(g).max(b);
 
         let l = 0.5 * (max + min);
-        if min == max {
+        if almost_eq(min, max) {
             return Self(0.0, 0.0, l);
         }
 
         let h = match () {
-            _ if max == r => 60.0 * (g - b) / (max - min),
-            _ if max == g => 60.0 * (b - r) / (max - min) + 120.0,
-            _ if max == b => 60.0 * (r - g) / (max - min) + 240.0,
+            _ if almost_eq(max, r) => 60.0 * (g - b) / (max - min),
+            _ if almost_eq(max, g) => 60.0 * (b - r) / (max - min) + 120.0,
+            _ if almost_eq(max, b) => 60.0 * (r - g) / (max - min) + 240.0,
             _ => 0.0,
         };
 
@@ -136,13 +139,9 @@ impl From<&Rgb> for Hsl {
 impl std::str::FromStr for Hsl {
     type Err = &'static str;
     fn from_str(input: &str) -> Result<Self, Self::Err> {
-        let Some(data) = input.strip_prefix("hsl(").and_then(|s| s.strip_suffix(')')) else {
-            return Err("hsl should be hsl(degrees, saturation%, lightness%)");
-        };
-
         #[derive(Debug)]
         enum Ratio {
-            Absolute(f32),
+            Degrees(f32),
             Percent(f32),
         }
         impl std::str::FromStr for Ratio {
@@ -151,20 +150,21 @@ impl std::str::FromStr for Hsl {
                 if let Some(s) = s.strip_suffix('%') {
                     return s.parse().map_err(|_| "invalid numeric").map(Self::Percent);
                 }
-                s.parse().map_err(|_| "invalid numeric").map(Self::Absolute)
+                s.parse().map_err(|_| "invalid numeric").map(Self::Degrees)
             }
         }
 
-        let mut iter = data
-            .split_terminator(',')
-            .flat_map(|s| s.trim().parse().ok());
+        let Some(data) = input.strip_prefix("hsl(").and_then(|s| s.strip_suffix(')')) else {
+            return Err("hsl should be hsl(degrees, saturation%, lightness%)");
+        };
 
+        let mut iter = data.split_terminator(',').flat_map(|s| s.trim().parse());
         let h = iter.next().ok_or("missing hue channel")?;
         let s = iter.next().ok_or("missing saturation channel")?;
         let l = iter.next().ok_or("missing lightness channel")?;
 
         let h = match h {
-            Ratio::Absolute(h) if (0.0..=360.0).contains(&h) => h,
+            Ratio::Degrees(h) if (0.0..=360.0).contains(&h) => h,
             _ => return Err("hue must be in degrees"),
         };
 

@@ -415,49 +415,56 @@ impl std::ops::SubAssign<ResizeDelta> for Rect {
 
 #[allow(dead_code)]
 impl Rect {
-    fn extend_with_x(&self, x: u16) -> Self {
+    #[must_use]
+    fn extend_with_x(self, x: u16) -> Self {
         Self {
             min: self.min.min(pos2(x, self.min.y)),
-            ..*self
+            ..self
         }
     }
 
-    fn extend_with_y(&self, y: u16) -> Self {
+    #[must_use]
+    fn extend_with_y(self, y: u16) -> Self {
         Self {
             min: self.min.min(pos2(self.min.x, y)),
-            ..*self
+            ..self
         }
     }
 
-    fn extend_with(&self, pos: Pos2) -> Self {
+    #[must_use]
+    fn extend_with(self, pos: Pos2) -> Self {
         Self {
             min: self.min.min(pos),
             max: self.max.max(pos),
         }
     }
 
-    fn shrink_with_x(&self, x: u16) -> Self {
+    #[must_use]
+    fn shrink_with_x(self, x: u16) -> Self {
         Self {
             min: self.min.max(pos2(x, self.min.y)),
-            ..*self
+            ..self
         }
     }
 
-    fn shrink_with_y(&self, y: u16) -> Self {
+    #[must_use]
+    fn shrink_with_y(self, y: u16) -> Self {
         Self {
             min: self.min.max(pos2(self.min.x, y)),
-            ..*self
+            ..self
         }
     }
 
-    fn shrink_with(&self, pos: Pos2) -> Self {
+    #[must_use]
+    fn shrink_with(self, pos: Pos2) -> Self {
         Self {
             min: self.min.max(pos),
             max: self.max.min(pos),
         }
     }
 
-    fn translate_with(&self, delta: Offset) -> Self {
+    #[must_use]
+    fn translate_with(self, delta: Offset) -> Self {
         Self {
             min: pos2(
                 Self::add(self.x(), self.width(), delta.x),

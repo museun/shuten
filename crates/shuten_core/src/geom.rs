@@ -165,6 +165,10 @@ impl Num for u16 {
     const ONE: Self = 1;
 }
 
+impl Num for usize {
+    const ONE: Self = 1;
+}
+
 impl Num for f32 {
     const ONE: Self = 1.0;
 }
