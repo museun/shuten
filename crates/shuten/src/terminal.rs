@@ -274,7 +274,7 @@ impl Terminal {
             self.resize(rect.size());
         }
 
-        if switch != false {
+        if switch {
             self.toggle_alt_screen()?;
         }
 

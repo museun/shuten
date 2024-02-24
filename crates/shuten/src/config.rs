@@ -107,10 +107,10 @@ impl From<Config> for ShareableConfig {
 
 impl ShareableConfig {
     pub fn mutate(&self, mut f: impl FnMut(&mut Config)) {
-        f(&mut *self.inner.lock().unwrap())
+        f(&mut self.inner.lock().unwrap())
     }
 
     pub fn get<T>(&self, mut f: impl FnMut(&Config) -> T) -> T {
-        f(&*self.inner.lock().unwrap())
+        f(&self.inner.lock().unwrap())
     }
 }
