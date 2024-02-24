@@ -1,6 +1,6 @@
-use shuten::{geom::Margin, Queue};
+use shuten::Queue;
 
-use super::{center, container, float, margin, scrollable::scrollable, toggle_bind};
+use super::{container, scrollable::scrollable, toggle_bind};
 use crate::{
     input::Keybind,
     logger::{LogItem, Logger},

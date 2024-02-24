@@ -1,6 +1,6 @@
 use std::cell::Cell;
 
-use shuten::geom::{pos2, pos2f, remap, vec2f, Rectf};
+use shuten::geom::{pos2f, remap, vec2f, Rectf};
 
 use crate::{
     context::{LayoutCtx, PaintCtx},
@@ -75,28 +75,20 @@ impl Widget for ScrollableWidget {
         let offset = self.pos;
 
         let mut size = Vec2f::ZERO;
-        // child before first logical child when offset is scrolling is getting
-        // painted at a weird horizontal offset
 
         let offset = offset.min(children.len().saturating_sub(height));
         for &child in &children[..offset] {
-            ctx.layout.hide(&ctx.tree, child)
+            ctx.layout.hide(ctx.tree, child)
         }
 
-        let mut tail = 0;
-        for (i, &child) in children[offset..].iter().enumerate() {
+        for &child in &children[offset..] {
             if size.y >= input.max.y {
-                tail = offset + i;
                 break;
             }
             let y = size.y;
             size += ctx.calculate(child, constraints);
             ctx.layout.set_pos(child, pos2f(0.0, y));
         }
-
-        // if tail < children.len() {
-        //     ctx.layout.hide_many(&ctx.tree, &children[tail..])
-        // }
 
         let size = input.max.min(size);
 
@@ -184,12 +176,8 @@ impl Widget for ScrollBarWidget {
 
         ctx.calculate(knob, Constraints::none());
 
-        let p = remap(
-            self.props.pos as f32,
-            0.0..=self.props.max,
-            0.0..=(size.y - 1.0),
-        )
-        .clamp(0.0, size.y - 1.0);
+        let p = remap(self.props.pos, 0.0..=self.props.max, 0.0..=(size.y - 1.0))
+            .clamp(0.0, size.y - 1.0);
         let pos = pos2f(size.x, p);
         ctx.layout.set_pos(knob, pos);
 
@@ -203,5 +191,5 @@ impl Widget for ScrollBarWidget {
 }
 
 pub fn scrollable(children: impl FnOnce()) -> Response<ScrollableResponse> {
-    Scrollable::default().show(children)
+    Scrollable.show(children)
 }

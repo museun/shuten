@@ -18,55 +18,12 @@ mod min_size;
 mod mouse_area;
 mod offset;
 mod reflow;
+mod render_cell;
 mod slider;
 mod spacer;
 mod state;
 mod toggle;
 mod unconstrained;
-
-mod render_cell {
-    use shuten::{
-        geom::{Constraints, Pos2, Vec2f},
-        Cell,
-    };
-
-    use crate::{
-        context::{LayoutCtx, PaintCtx},
-        NoResponse, Response, Widget, WidgetExt,
-    };
-
-    #[derive(Debug, Default)]
-    struct RenderCell(Cell);
-
-    #[derive(Debug, Default)]
-    struct RenderCellWidget {
-        props: RenderCell,
-    }
-
-    impl Widget for RenderCellWidget {
-        type Props<'a> = RenderCell;
-        type Response = NoResponse;
-
-        fn update(&mut self, props: Self::Props<'_>) -> Self::Response {
-            self.props = props;
-        }
-
-        fn layout(&self, _: LayoutCtx<'_>, input: Constraints) -> Vec2f {
-            input.constrain_min(Vec2f::splat(1.0))
-        }
-
-        fn paint(&self, mut ctx: PaintCtx<'_, '_>) {
-            let mut canvas = ctx.cropped_canvas();
-            for pos in canvas.area().indices() {
-                canvas.put(pos, self.props.0)
-            }
-        }
-    }
-
-    pub fn render_cell(cell: Cell) -> Response {
-        RenderCellWidget::show(RenderCell(cell))
-    }
-}
 
 pub mod text_input;
 
@@ -127,6 +84,9 @@ pub use self::offset::*;
 
 #[doc(inline)]
 pub use self::reflow::*;
+
+#[doc(inline)]
+pub use self::render_cell::*;
 
 #[doc(inline)]
 pub use self::slider::*;

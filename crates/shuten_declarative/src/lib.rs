@@ -59,7 +59,7 @@ impl<'a> Term<'a> {
     }
 
     pub fn terminal(&mut self) -> &mut Terminal {
-        &mut self.terminal
+        self.terminal
     }
 
     pub const fn shuten(&self) -> &Shuten {
@@ -188,7 +188,7 @@ pub fn debug_run<R>(
     Ok(())
 }
 
-pub fn run<R>(config: Config, mut ui: impl FnMut(Term<'_>) -> R) -> std::io::Result<()> {
+pub fn run<R>(config: Config, ui: impl FnMut(Term<'_>) -> R) -> std::io::Result<()> {
     debug_run(config, false, ui)
 }
 

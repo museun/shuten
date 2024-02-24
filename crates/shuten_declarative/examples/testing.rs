@@ -4,7 +4,6 @@ use shuten::geom::{vec2f, MainAxisAlignment, Margin};
 use shuten_declarative::{
     debug_run,
     logger::Logger,
-    run,
     widgets::{scrollable::scrollable, *},
     Config, Rgb, Term,
 };
@@ -12,9 +11,13 @@ use shuten_declarative::{
 fn main() -> std::io::Result<()> {
     Logger::init(true);
 
-    debug_run(Config::default().ctrl_z_switches(true), true, |mut term| {
-        ui(&mut term);
-    })
+    debug_run(
+        Config::default().ctrl_z_switches(false),
+        false,
+        |mut term| {
+            ui(&mut term);
+        },
+    )
 }
 
 fn ui(_term: &mut Term<'_>) {

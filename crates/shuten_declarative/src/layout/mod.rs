@@ -1,7 +1,5 @@
 use std::collections::VecDeque;
 
-use thunderdome::Arena;
-
 use crate::{
     geom::{Constraints, Pos2f, Rectf, Vec2f},
     input::{Input, Interest},
@@ -19,13 +17,14 @@ pub(crate) type Mouse = Layered<Interest>;
 
 mod node;
 pub use node::Node;
+use slotmap::SecondaryMap;
 
 #[derive(serde::Serialize)]
 pub struct Layout {
     pub(crate) mouse: Mouse,
     pub(crate) keyboard: Keyboard,
-    #[serde(with = "crate::external::serialize_arena")]
-    nodes: Arena<Node>,
+    #[serde(with = "crate::external::serialize_secondary_map")]
+    nodes: SecondaryMap<WidgetId, Node>,
     clip_stack: Vec<WidgetId>,
     rect: Rectf,
 }
@@ -35,7 +34,7 @@ impl std::fmt::Debug for Layout {
         f.debug_struct("Layout")
             .field("mouse", &self.mouse)
             .field("keyboard", &self.keyboard)
-            .field("nodes", &crate::external::ArenaPrinter(&self.nodes))
+            .field("nodes", &crate::external::SecondaryMapPrinter(&self.nodes))
             .field("clip_stack", &self.clip_stack)
             .field("rect", &self.rect)
             .finish()
@@ -45,7 +44,7 @@ impl std::fmt::Debug for Layout {
 impl Layout {
     pub fn new(rect: Rectf) -> Self {
         Self {
-            nodes: Arena::new(),
+            nodes: SecondaryMap::new(),
             clip_stack: Vec::new(),
             mouse: Mouse::default(),
             keyboard: Keyboard::default(),
@@ -58,15 +57,15 @@ impl Layout {
     }
 
     pub fn get(&self, id: WidgetId) -> Option<&Node> {
-        self.nodes.get(id.get())
+        self.nodes.get(id)
     }
 
     pub fn get_mut(&mut self, id: WidgetId) -> Option<&mut Node> {
-        self.nodes.get_mut(id.get())
+        self.nodes.get_mut(id)
     }
 
     pub fn set_pos(&mut self, id: WidgetId, pos: Pos2f) {
-        if let Some(node) = self.nodes.get_mut(id.get()) {
+        if let Some(node) = self.nodes.get_mut(id) {
             node.rect.set_pos(pos)
         }
     }
@@ -79,10 +78,10 @@ impl Layout {
 
     pub fn hide(&mut self, tree: &Tree, id: WidgetId) {
         if let Some(node) = tree.get(id) {
-            for child in &node.children {
-                self.nodes.remove(child.get());
+            for &child in &node.children {
+                self.nodes.remove(child);
             }
-            self.nodes.remove(id.get());
+            self.nodes.remove(id);
         }
     }
 
@@ -143,7 +142,7 @@ impl Layout {
             interest,
             clipped_by,
         };
-        self.nodes.insert_at(id.get(), value);
+        self.nodes.insert(id, value);
 
         tree.exit(id);
         size
@@ -160,8 +159,8 @@ impl Layout {
     }
 
     fn cleanup(&mut self, widgets: &[WidgetId]) {
-        for id in widgets {
-            self.nodes.remove(id.get());
+        for &id in widgets {
+            self.nodes.remove(id);
         }
     }
 
@@ -170,7 +169,7 @@ impl Layout {
         queue.push_back((tree.root(), Pos2f::ZERO));
 
         while let Some((id, pos)) = queue.pop_front() {
-            if let Some(layout_node) = self.nodes.get_mut(id.get()) {
+            if let Some(layout_node) = self.nodes.get_mut(id) {
                 let node = tree.get(id).unwrap();
                 layout_node.rect.set_pos(layout_node.rect.min + pos);
                 queue.extend(node.children.iter().map(|&id| (id, layout_node.rect.min)));
