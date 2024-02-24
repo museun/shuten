@@ -1,6 +1,3 @@
-use crate::NoResponse;
-use crate::{geom::Vec2f, widget::Response, Color};
-
 mod align;
 mod button;
 mod color_box;
@@ -102,9 +99,5 @@ pub use self::toggle::*;
 
 #[doc(inline)]
 pub use self::unconstrained::*;
-
-pub fn container(bg: impl Into<Color>, children: impl FnOnce()) -> Response<NoResponse> {
-    ColorBox::new(bg, Vec2f::ZERO).show_children(children)
-}
 
 pub mod scrollable;

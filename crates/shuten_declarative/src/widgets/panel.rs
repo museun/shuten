@@ -1,13 +1,6 @@
 use std::cell::RefCell;
 
-use crate::{
-    context::LayoutCtx,
-    geom::{Constraints, Vec2f},
-    widget::Response,
-    Widget, WidgetExt as _,
-};
-
-use super::NoResponse;
+use crate::widget::prelude::*;
 
 pub enum PanelKind {
     Vertical,

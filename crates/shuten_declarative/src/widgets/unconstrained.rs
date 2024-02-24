@@ -1,11 +1,6 @@
-use crate::{
-    geom::{vec2f, Constraints, Vec2f},
-    layout::LayoutCtx,
-    widget::{Response, Widget},
-    WidgetExt,
-};
+use shuten::geom::vec2f;
 
-use super::NoResponse;
+use crate::widget::prelude::*;
 
 #[derive(Debug)]
 struct Unconstrained {

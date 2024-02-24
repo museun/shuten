@@ -1,8 +1,4 @@
-use crate::{
-    geom::{Constraints, Vec2f},
-    layout::LayoutCtx,
-    NoResponse, Widget,
-};
+use crate::widget::prelude::*;
 
 #[derive(Debug, Default)]
 pub struct RootWidget;

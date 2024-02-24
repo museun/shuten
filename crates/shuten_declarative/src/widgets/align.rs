@@ -1,13 +1,6 @@
 use shuten::geom::Align2;
 
-use crate::{
-    geom::{vec2f, Constraints, Vec2f},
-    layout::LayoutCtx,
-    widget::{Response, Widget},
-    WidgetExt as _,
-};
-
-use super::NoResponse;
+use crate::{geom::vec2f, widget::prelude::*};
 
 #[derive(Debug)]
 pub struct Align {

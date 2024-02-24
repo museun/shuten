@@ -1,12 +1,6 @@
 use shuten::event::MouseButton;
 
-use crate::{
-    context::{LayoutCtx, PaintCtx},
-    geom::{Constraints, Vec2f},
-    input::{Event, EventCtx, Handled, Interest},
-    widget::Response,
-    Widget, WidgetExt,
-};
+use crate::widget::prelude::*;
 
 use super::label;
 

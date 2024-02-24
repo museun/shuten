@@ -1,4 +1,4 @@
-use crate::{NoResponse, Widget};
+use crate::widget::prelude::*;
 
 #[derive(Debug, Default)]
 pub struct DummyWidget;

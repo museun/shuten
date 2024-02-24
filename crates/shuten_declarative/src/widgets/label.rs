@@ -1,18 +1,11 @@
 use shuten::{
+    geom::vec2f,
     style::{Attribute, Color},
     Cell,
 };
 use unicode_width::{UnicodeWidthChar, UnicodeWidthStr as _};
 
-use crate::{
-    geom::{vec2f, Constraints, Vec2f},
-    layout::LayoutCtx,
-    paint::PaintCtx,
-    widget::{Response, Widget},
-    WidgetExt,
-};
-
-use super::NoResponse;
+use crate::widget::prelude::*;
 
 #[derive(Debug)]
 pub struct Label {

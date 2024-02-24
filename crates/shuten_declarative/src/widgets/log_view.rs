@@ -1,11 +1,10 @@
 use shuten::Queue;
 
-use super::{container, scrollable::scrollable, toggle_bind};
-use crate::{
-    input::Keybind,
-    logger::{LogItem, Logger},
-    NoResponse, Response, Widget, WidgetExt as _,
-};
+use crate::input::Keybind;
+use crate::logger::{LogItem, Logger};
+
+use crate::widget::prelude::*;
+use crate::widgets::{container, scrollable::scrollable, toggle_bind};
 
 #[derive(Debug)]
 pub struct LogView;

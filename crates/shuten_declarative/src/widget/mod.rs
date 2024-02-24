@@ -1,8 +1,7 @@
 use crate::{
+    context::{EventCtx, LayoutCtx, PaintCtx},
     geom::{Constraints, FlexFit, Flow, Vec2f},
-    input::{Event, EventCtx, Handled, Interest},
-    layout::LayoutCtx,
-    paint::PaintCtx,
+    input::{Event, Handled, Interest},
 };
 
 mod root_widget;
@@ -19,6 +18,17 @@ pub use response::{NoResponse, Response};
 
 mod widget_ext;
 pub use widget_ext::WidgetExt;
+
+pub mod prelude {
+    #[doc(inline)]
+    pub use crate::context::{EventCtx, LayoutCtx, PaintCtx};
+    #[doc(inline)]
+    pub use crate::geom::{Constraints, FlexFit, Flow, Vec2f};
+    #[doc(inline)]
+    pub use crate::input::{Event, Handled, Interest};
+    #[doc(inline)]
+    pub use crate::widget::{NoResponse, Response, Widget, WidgetExt};
+}
 
 pub trait Props: std::fmt::Debug {}
 

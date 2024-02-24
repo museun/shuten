@@ -1,13 +1,11 @@
 use std::collections::VecDeque;
 
 use crate::{
+    context::LayoutCtx,
     geom::{Constraints, Pos2f, Rectf, Vec2f},
     input::{Input, Interest},
     tree::{Tree, WidgetId},
 };
-
-pub(crate) mod ctx;
-pub(crate) use ctx::LayoutCtx;
 
 mod layered;
 use layered::Layered;
@@ -23,10 +21,11 @@ use slotmap::SecondaryMap;
 pub struct Layout {
     pub(crate) mouse: Mouse,
     pub(crate) keyboard: Keyboard,
+    pub(crate) rect: Rectf,
+
     #[serde(with = "crate::external::serialize_secondary_map")]
     nodes: SecondaryMap<WidgetId, Node>,
     clip_stack: Vec<WidgetId>,
-    rect: Rectf,
 }
 
 impl std::fmt::Debug for Layout {
@@ -94,7 +93,7 @@ impl Layout {
         self.calculate_all(tree, input);
     }
 
-    fn calculate(
+    pub(crate) fn calculate(
         &mut self,
         tree: &Tree,
         input: &Input,
@@ -103,12 +102,14 @@ impl Layout {
     ) -> Vec2f {
         tree.enter(id);
         let node = tree.get(id).unwrap();
-        let ctx = LayoutCtx {
-            tree,
-            input,
-            layout: self,
-        };
-        let size = node.widget.layout(ctx, constraints);
+        let size = node.widget.layout(
+            LayoutCtx {
+                tree,
+                input,
+                layout: self,
+            },
+            constraints,
+        );
 
         let new_layer = self.mouse.current_layer_root() == Some(id)
             || self.keyboard.current_layer_root() == Some(id);
@@ -135,27 +136,37 @@ impl Layout {
             self.clip_stack.last().copied()
         };
 
-        let value = Node {
-            rect: Rectf::from_min_size(Pos2f::ZERO, size),
-            ty: node.widget.type_name(),
-            clipping,
-            interest,
-            clipped_by,
-        };
-        self.nodes.insert(id, value);
+        self.nodes.insert(
+            id,
+            Node {
+                rect: Rectf::from_min_size(Pos2f::ZERO, size),
+                ty: node.widget.type_name(),
+                clipping,
+                interest,
+                clipped_by,
+            },
+        );
 
         tree.exit(id);
         size
     }
 
     fn calculate_all(&mut self, tree: &Tree, input: &Input) {
+        self.clear();
+
+        self.calculate(
+            tree,
+            input,
+            tree.root(),
+            Constraints::tight(self.rect.size()),
+        );
+        self.resolve(tree);
+    }
+
+    fn clear(&mut self) {
         self.clip_stack.clear();
         self.mouse.clear();
         self.keyboard.clear();
-
-        let size = self.rect.size();
-        self.calculate(tree, input, tree.root(), Constraints::tight(size));
-        self.resolve(tree);
     }
 
     fn cleanup(&mut self, widgets: &[WidgetId]) {
@@ -169,11 +180,27 @@ impl Layout {
         queue.push_back((tree.root(), Pos2f::ZERO));
 
         while let Some((id, pos)) = queue.pop_front() {
-            if let Some(layout_node) = self.nodes.get_mut(id) {
-                let node = tree.get(id).unwrap();
-                layout_node.rect.set_pos(layout_node.rect.min + pos);
-                queue.extend(node.children.iter().map(|&id| (id, layout_node.rect.min)));
-            }
+            let Some(node) = self.nodes.get_mut(id) else {
+                continue;
+            };
+            node.rect.set_pos(node.rect.min + pos);
+            let rect = node.rect;
+
+            let node = tree.get(id).unwrap();
+            queue.extend(node.children.iter().map(|&id| (id, rect.min)));
         }
+    }
+}
+
+impl std::ops::Index<WidgetId> for Layout {
+    type Output = Node;
+    fn index(&self, index: WidgetId) -> &Self::Output {
+        &self.nodes[index]
+    }
+}
+
+impl std::ops::IndexMut<WidgetId> for Layout {
+    fn index_mut(&mut self, index: WidgetId) -> &mut Self::Output {
+        &mut self.nodes[index]
     }
 }

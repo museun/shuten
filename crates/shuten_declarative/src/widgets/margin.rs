@@ -1,9 +1,4 @@
-use crate::{
-    geom::{Constraints, Vec2f},
-    layout::LayoutCtx,
-    widget::{Response, Widget},
-    WidgetExt,
-};
+use crate::widget::prelude::*;
 
 use shuten::geom::Margin;
 

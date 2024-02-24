@@ -1,10 +1,9 @@
 use std::any::Any;
 
 use crate::{
+    context::{EventCtx, LayoutCtx, PaintCtx},
     geom::{Constraints, FlexFit, Flow, Vec2f},
-    input::{Event, EventCtx, Handled, Interest},
-    layout::LayoutCtx,
-    paint::PaintCtx,
+    input::{Event, Handled, Interest},
     Widget,
 };
 

@@ -1,28 +1,24 @@
-use crate::{tree::WidgetId, widget::ErasedWidget};
+use crate::{tree::WidgetId, widget::ErasedWidget, Widget};
 
 #[derive(serde::Serialize)]
 pub struct Node {
-    #[serde(with = "erased_widget")]
+    #[serde(with = "crate::external::erased_widget")]
     pub(crate) widget: Box<dyn ErasedWidget>,
     pub(crate) parent: Option<WidgetId>,
     pub(crate) children: Vec<WidgetId>,
     pub(crate) next: usize,
 }
 
-mod erased_widget {
-    use crate::widget::ErasedWidget;
-
-    #[allow(clippy::borrowed_box)]
-    pub fn serialize<S>(ew: &Box<dyn ErasedWidget>, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: ::serde::Serializer,
-    {
-        let repr = format!("{ew:#?}",);
-        serializer.serialize_str(&repr)
-    }
-}
-
 impl Node {
+    pub(super) fn new(widget: impl Widget + 'static, parent: Option<WidgetId>) -> Self {
+        Self {
+            widget: Box::new(widget),
+            parent,
+            children: Vec::new(),
+            next: 0,
+        }
+    }
+
     pub const fn parent(&self) -> Option<WidgetId> {
         self.parent
     }

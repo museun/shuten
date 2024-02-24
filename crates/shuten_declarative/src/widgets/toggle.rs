@@ -1,9 +1,6 @@
 use crate::{
-    geom::{Constraints, Vec2f},
-    input::{Event, EventCtx, Handled, Interest, KeyEventKind, Keybind},
-    layout::LayoutCtx,
-    paint::PaintCtx,
-    Response, Widget, WidgetExt as _,
+    input::{KeyEventKind, Keybind},
+    widget::prelude::*,
 };
 
 #[derive(Debug)]
@@ -63,12 +60,12 @@ impl Widget for ToggleWidget {
                 return Handled::Sink;
             }
         }
-
         Handled::Bubble
     }
 
     fn layout(&self, ctx: LayoutCtx<'_>, input: Constraints) -> Vec2f {
         if !self.shown {
+            // TODO hide children
             return Vec2f::ZERO;
         }
         self.default_layout(ctx, input)

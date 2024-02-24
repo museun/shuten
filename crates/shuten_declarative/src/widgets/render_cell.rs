@@ -3,10 +3,7 @@ use shuten::{
     Cell,
 };
 
-use crate::{
-    context::{LayoutCtx, PaintCtx},
-    NoResponse, Response, Widget, WidgetExt,
-};
+use crate::widget::prelude::*;
 
 #[derive(Debug, Default)]
 struct RenderCell(Cell);

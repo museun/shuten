@@ -5,7 +5,7 @@ pub trait WidgetExt: Widget {
     where
         Self: Sized,
     {
-        current_tree().do_widget::<Self>(props)
+        current_tree().widget::<Self>(props)
     }
 
     fn show_children(children: impl FnOnce(), props: Self::Props<'_>) -> Response<Self::Response>

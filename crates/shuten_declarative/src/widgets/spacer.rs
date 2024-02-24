@@ -1,12 +1,4 @@
-use crate::{
-    context::PaintCtx,
-    geom::{Constraints, FlexFit, Vec2f},
-    layout::LayoutCtx,
-    widget::{Response, Widget},
-    WidgetExt,
-};
-
-use super::NoResponse;
+use crate::widget::prelude::*;
 
 #[derive(Debug)]
 struct SpacerWidget {

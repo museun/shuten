@@ -1,10 +1,4 @@
-use crate::{
-    geom::FlexFit,
-    widget::{Response, Widget},
-    WidgetExt,
-};
-
-use super::NoResponse;
+use crate::widget::prelude::*;
 
 #[derive(Debug)]
 pub struct Flexible {

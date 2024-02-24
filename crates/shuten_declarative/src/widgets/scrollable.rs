@@ -2,13 +2,7 @@ use std::cell::Cell;
 
 use shuten::geom::{pos2f, remap, vec2f, Rectf};
 
-use crate::{
-    context::{LayoutCtx, PaintCtx},
-    geom::{Constraints, Vec2f},
-    input::{Event, EventCtx, Handled, Interest, KeyEventKind},
-    tree::current_tree,
-    NoResponse, Response, Widget, WidgetExt as _,
-};
+use crate::{input::KeyEventKind, tree::current_tree, widget::prelude::*};
 
 use super::{draggable, render_cell::render_cell};
 

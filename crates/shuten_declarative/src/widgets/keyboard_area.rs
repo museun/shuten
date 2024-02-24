@@ -1,8 +1,8 @@
 use shuten::event::Modifiers;
 
 use crate::{
-    input::{Event, EventCtx, Handled, Interest, KeyEventKind, Keybind},
-    Response, Widget, WidgetExt,
+    input::{KeyEventKind, Keybind},
+    widget::prelude::*,
 };
 
 #[derive(Debug, Clone)]

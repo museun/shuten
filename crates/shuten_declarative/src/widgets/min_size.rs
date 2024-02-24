@@ -1,11 +1,6 @@
-use crate::{
-    context::LayoutCtx,
-    geom::{vec2f, Constraints, Vec2f},
-    widget::Response,
-    Widget, WidgetExt as _,
-};
+use shuten::geom::vec2f;
 
-use super::NoResponse;
+use crate::widget::prelude::*;
 
 #[derive(Debug)]
 pub struct MinSize {

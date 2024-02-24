@@ -1,16 +1,11 @@
 use std::cell::Cell;
 
 use shuten::{
-    geom::{almost_eq, remap},
+    geom::{almost_eq, pos2f, remap, vec2f, Rectf},
     style::Rgb,
 };
 
-use crate::{
-    context::{LayoutCtx, PaintCtx},
-    geom::{pos2f, vec2f, Constraints, Rectf, Vec2f},
-    widget::Response,
-    Widget, WidgetExt,
-};
+use crate::widget::prelude::*;
 
 use super::{color_box, draggable};
 

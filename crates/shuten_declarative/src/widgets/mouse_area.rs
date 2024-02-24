@@ -1,11 +1,6 @@
-use shuten::geom::almost_eq;
+use shuten::geom::{almost_eq, Pos2f};
 
-use crate::{
-    geom::Pos2f,
-    input::{Event, EventCtx, Handled, Interest},
-    widget::Response,
-    Widget, WidgetExt,
-};
+use crate::widget::prelude::*;
 
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub struct MouseAreaResponse {

@@ -5,12 +5,7 @@ use shuten::{
     style::{Color, Rgb},
 };
 
-use crate::{
-    geom::Vec2f,
-    input::{Event, EventCtx, Handled, Interest},
-    widget::{Response, Widget},
-    WidgetExt as _,
-};
+use crate::widget::prelude::*;
 
 use super::{margin::margin, ColorBox, Label};
 

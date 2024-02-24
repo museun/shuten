@@ -1,13 +1,11 @@
 use shuten::Canvas;
 
 use crate::{
+    context::PaintCtx,
     geom::Rectf,
     layout::Layout,
     tree::{Tree, WidgetId},
 };
-
-pub mod ctx;
-pub use ctx::PaintCtx;
 
 #[derive(Debug, serde::Serialize)]
 pub struct Paint {
@@ -25,7 +23,14 @@ impl Paint {
         self.clip_stack.clear();
     }
 
-    fn paint(&mut self, tree: &Tree, layout: &Layout, canvas: &mut Canvas<'_>, id: WidgetId) {
+    pub(crate) fn paint(
+        &mut self,
+        tree: &Tree,
+        layout: &Layout,
+        canvas: &mut Canvas<'_>,
+        id: WidgetId,
+    ) {
+        // if this node doesn't exist in the layout, don't paint it
         let Some(node) = layout.get(id) else { return };
 
         if node.clipping {
@@ -37,7 +42,7 @@ impl Paint {
             tree,
             layout,
             paint: self,
-            rect: layout.get(id).unwrap().rect,
+            rect: layout[id].rect,
             canvas,
         };
         tree.get(id).unwrap().widget.paint(ctx);

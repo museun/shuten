@@ -1,11 +1,6 @@
-use shuten::event::MouseButton;
+use shuten::{event::MouseButton, geom::Pos2f};
 
-use crate::{
-    geom::{Pos2f, Vec2f},
-    input::{Event, EventCtx, Handled, Interest},
-    widget::Response,
-    Widget, WidgetExt,
-};
+use crate::widget::prelude::*;
 
 #[derive(Copy, Clone, Debug)]
 pub struct DraggableResponse {

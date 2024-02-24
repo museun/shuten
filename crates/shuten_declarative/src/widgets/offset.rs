@@ -1,11 +1,6 @@
-use crate::{
-    geom::{Constraints, Pos2f, Vec2f},
-    layout::LayoutCtx,
-    widget::{Response, Widget},
-    WidgetExt,
-};
+use shuten::geom::Pos2f;
 
-use super::NoResponse;
+use crate::widget::prelude::*;
 
 #[derive(Default, Debug)]
 struct Offset {

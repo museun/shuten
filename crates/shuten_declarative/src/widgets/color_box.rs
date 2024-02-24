@@ -1,14 +1,6 @@
 use shuten::style::Color;
 
-use crate::{
-    geom::{Constraints, Vec2f},
-    layout::LayoutCtx,
-    paint::PaintCtx,
-    widget::{Response, Widget},
-    WidgetExt,
-};
-
-use super::NoResponse;
+use crate::widget::prelude::*;
 
 #[derive(Debug)]
 pub struct ColorBox {
@@ -74,4 +66,8 @@ impl Widget for ColorBoxWidget {
 
 pub fn color_box(color: impl Into<Color>, size: Vec2f) -> Response {
     ColorBox::new(color, size).show()
+}
+
+pub fn container(bg: impl Into<Color>, children: impl FnOnce()) -> Response {
+    ColorBox::new(bg, Vec2f::ZERO).show_children(children)
 }

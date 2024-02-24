@@ -1,14 +1,6 @@
 use shuten_core::{geom::Rect, Canvas, Rgb};
 
-use crate::{
-    context::LayoutCtx,
-    geom::{vec2f, Constraints, Rectf, Vec2f},
-    painter::{self, PaintCtx},
-    widget::Response,
-    Widget, WidgetExt,
-};
-
-use super::NoResponse;
+use crate::widget::prelude::*;
 
 pub struct Divider {
     color: Rgb,

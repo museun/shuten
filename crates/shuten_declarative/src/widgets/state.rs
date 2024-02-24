@@ -3,11 +3,7 @@ use std::{
     rc::Rc,
 };
 
-use crate::{
-    context::LayoutCtx,
-    geom::{Constraints, Vec2f},
-    widget::{Response, Widget, WidgetExt as _},
-};
+use crate::widget::prelude::*;
 
 struct State<T: 'static> {
     default: Box<dyn FnOnce() -> T>,

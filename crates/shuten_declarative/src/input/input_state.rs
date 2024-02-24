@@ -1,11 +1,10 @@
-use std::cell::{Cell, RefCell};
-
 use shuten::{
     event::{Event as CoreEvent, Modifiers, MouseButton},
     geom::Vec2f,
 };
 
 use crate::{
+    context::EventCtx,
     geom::Pos2f,
     layout::Layout,
     tree::{Node, Tree, WidgetId},
@@ -13,16 +12,26 @@ use crate::{
 
 use super::{
     mouse::{ButtonState, Intersections, Mouse},
-    Event, EventCtx, Handled, MouseEvent, TranslateKeyEvent, TranslateMouseEvent,
+    Event, Handled, MouseEvent, TranslateKeyEvent, TranslateMouseEvent,
 };
 
 #[derive(Debug, Default, serde::Serialize)]
 pub struct Input {
-    mouse: RefCell<Mouse>,
-    modifiers: Cell<Modifiers>,
-    intersections: RefCell<Intersections>,
-    selection: Cell<Option<WidgetId>>,
-    last_selection: Cell<Option<WidgetId>>,
+    mouse: Mouse,
+    modifiers: Modifiers,
+    intersections: Intersections,
+    selection: Option<WidgetId>,
+    last_selection: Option<WidgetId>,
+}
+
+impl Input {
+    pub fn selection(&self) -> Option<WidgetId> {
+        self.selection
+    }
+
+    pub fn set_selection(&mut self, id: Option<WidgetId>) {
+        self.selection = id
+    }
 }
 
 impl Input {
@@ -30,26 +39,17 @@ impl Input {
         Self::default()
     }
 
-    pub fn selection(&self) -> Option<WidgetId> {
-        self.selection.get()
-    }
-
-    pub fn set_selection(&self, id: Option<WidgetId>) {
-        self.selection.set(id)
-    }
-
-    pub(crate) fn start(&self, tree: &Tree, layout: &Layout) {
+    pub(crate) fn start(&mut self, tree: &Tree, layout: &Layout) {
         self.notify(tree, layout)
     }
 
-    pub(crate) fn finish(&self) {
-        let mut mouse = self.mouse.borrow_mut();
-        for state in mouse.buttons.values_mut() {
+    pub(crate) fn finish(&mut self) {
+        for state in self.mouse.buttons.values_mut() {
             state.interpolate();
         }
     }
 
-    pub(crate) fn handle(&self, tree: &Tree, layout: &Layout, event: &CoreEvent) -> Handled {
+    pub(crate) fn handle(&mut self, tree: &Tree, layout: &Layout, event: &CoreEvent) -> Handled {
         match event {
             CoreEvent::Mouse(ev, modifiers) => {
                 self.update_modifiers(*modifiers);
@@ -66,7 +66,7 @@ impl Input {
 
 impl Input {
     pub fn mouse_changed(
-        &self,
+        &mut self,
         tree: &Tree,
         layout: &Layout,
         ev: &impl TranslateMouseEvent,
@@ -74,6 +74,7 @@ impl Input {
         let Some(event) = ev.translate() else {
             return Handled::Bubble;
         };
+
         match event {
             MouseEvent::MouseMove { pos } => {
                 self.mouse_moved(tree, layout, pos);
@@ -111,7 +112,7 @@ impl Input {
     }
 
     pub fn keyboard_key_changed(
-        &self,
+        &mut self,
         tree: &Tree,
         layout: &Layout,
         key: &impl TranslateKeyEvent,
@@ -124,14 +125,14 @@ impl Input {
             if let Some(mut node) = tree.get_mut(id) {
                 let event = Event::KeyChanged {
                     key,
-                    modifiers: self.modifiers.get(),
+                    modifiers: self.modifiers,
                 };
                 // TODO this swallows focused events
-                return self.event(tree, layout, id, &mut node, &event);
+                return self.emit(tree, layout, id, &mut node, &event);
             }
         }
 
-        if let Some(id) = self.selection.get() {
+        if let Some(id) = self.selection {
             let Some(node) = layout.get(id) else {
                 return Handled::Bubble;
             };
@@ -140,81 +141,90 @@ impl Input {
                 let mut node = tree.get_mut(id).unwrap();
                 let event = Event::KeyChanged {
                     key,
-                    modifiers: self.modifiers.get(),
+                    modifiers: self.modifiers,
                 };
-                return self.event(tree, layout, id, &mut node, &event);
+                return self.emit(tree, layout, id, &mut node, &event);
             }
         }
 
         Handled::Bubble
     }
 
-    pub fn update_modifiers(&self, modifiers: Modifiers) {
-        self.modifiers.set(modifiers)
+    pub fn update_modifiers(&mut self, modifiers: Modifiers) {
+        self.modifiers = modifiers;
     }
 
-    pub fn mouse_moved(&self, tree: &Tree, layout: &Layout, pos: Pos2f) {
-        let _ = self.mouse.borrow_mut().pos.replace(pos);
+    pub fn mouse_moved(&mut self, tree: &Tree, layout: &Layout, pos: Pos2f) {
+        let _ = self.mouse.pos.replace(pos);
         self.send_mouse_move(tree, layout);
         self.mouse_hit_test(tree, layout);
         self.send_mouse_enter(tree, layout);
         self.send_mouse_leave(tree, layout);
     }
 
-    fn send_mouse_move(&self, tree: &Tree, layout: &Layout) {
-        let mouse = self.mouse.borrow();
-        let event = Event::MouseMoved { pos: mouse.pos };
+    fn send_mouse_move(&mut self, tree: &Tree, layout: &Layout) {
+        let event = Event::MouseMoved {
+            pos: self.mouse.pos,
+        };
         for (id, interest) in layout.mouse.iter() {
             if interest.is_mouse_move() {
                 if let Some(mut node) = tree.get_mut(id) {
-                    self.event(tree, layout, id, &mut node, &event);
+                    self.emit(tree, layout, id, &mut node, &event);
                 }
             }
         }
     }
 
-    fn send_mouse_enter(&self, tree: &Tree, layout: &Layout) {
-        let intersections = &mut *self.intersections.borrow_mut();
-        for &hit in &intersections.hit {
-            if let Some(mut node) = tree.get_mut(hit) {
-                if !intersections.entered.contains(&hit) {
-                    intersections.entered.push(hit);
-                    let resp = self.event(tree, layout, hit, &mut node, &Event::MouseEnter);
-                    if resp == Handled::Sink {
-                        intersections.entered_and_sunk.push(hit);
-                        break;
-                    }
-                } else if intersections.entered_and_sunk.contains(&hit) {
+    fn send_mouse_enter(&mut self, tree: &Tree, layout: &Layout) {
+        let mut hit = std::mem::take(&mut self.intersections.hit);
+
+        for &hit in &hit {
+            let Some(mut node) = tree.get_mut(hit) else {
+                continue;
+            };
+
+            if !self.intersections.entered.contains(&hit) {
+                self.intersections.entered.push(hit);
+                if self
+                    .emit(tree, layout, hit, &mut node, &Event::MouseEnter)
+                    .is_sink()
+                {
+                    self.intersections.entered_and_sunk.push(hit);
                     break;
                 }
             }
+
+            if self.intersections.entered_and_sunk.contains(&hit) {
+                break;
+            }
         }
+
+        std::mem::swap(&mut self.intersections.hit, &mut hit);
     }
 
-    fn send_mouse_leave(&self, tree: &Tree, layout: &Layout) {
-        let intersections = &mut *self.intersections.borrow_mut();
+    fn send_mouse_leave(&mut self, tree: &Tree, layout: &Layout) {
         let mut dead = vec![];
-        for &hit in &intersections.entered {
-            if !intersections.hit.contains(&hit) {
+        let mut entered = std::mem::take(&mut self.intersections.entered);
+        for &hit in &entered {
+            if !self.intersections.hit.contains(&hit) {
                 if let Some(mut node) = tree.get_mut(hit) {
-                    self.event(tree, layout, hit, &mut node, &Event::MouseLeave);
+                    self.emit(tree, layout, hit, &mut node, &Event::MouseLeave);
                 }
                 dead.push(hit);
             }
         }
+        std::mem::swap(&mut self.intersections.entered, &mut entered);
 
         for dead in dead {
-            intersections.entered.retain(|&id| id != dead);
-            intersections.entered_and_sunk.retain(|&id| id != dead);
+            self.intersections.entered.retain(|&id| id != dead);
+            self.intersections.entered_and_sunk.retain(|&id| id != dead);
         }
     }
 
-    fn mouse_hit_test(&self, tree: &Tree, layout: &Layout) {
-        let mut intersections = self.intersections.borrow_mut();
-        let mouse = self.mouse.borrow();
-        intersections.hit.clear();
-        if let Some(pos) = mouse.pos {
-            Self::hit_test(tree, layout, pos, &mut intersections.hit)
+    fn mouse_hit_test(&mut self, tree: &Tree, layout: &Layout) {
+        self.intersections.hit.clear();
+        if let Some(pos) = self.mouse.pos {
+            Self::hit_test(tree, layout, pos, &mut self.intersections.hit)
         }
     }
 
@@ -226,7 +236,7 @@ impl Input {
 
             let mut rect = node.rect;
             while let Some(parent) = node.clipped_by {
-                node = layout.get(parent).unwrap();
+                node = &layout[parent];
                 rect = rect.constrain(node.rect);
             }
 
@@ -237,108 +247,118 @@ impl Input {
     }
 
     fn mouse_button_changed(
-        &self,
+        &mut self,
         tree: &Tree,
         layout: &Layout,
         button: MouseButton,
         down: bool,
     ) -> Handled {
-        {
-            let mut mouse = self.mouse.borrow_mut();
-            let state = mouse.buttons.entry(button).or_insert(ButtonState::Released);
-            match (state.is_down(), down) {
-                (true, true) | (false, false) => {}
-                (false, true) => *state = ButtonState::Down,
-                (true, false) => *state = ButtonState::Up,
-            }
+        let state = self
+            .mouse
+            .buttons
+            .entry(button)
+            .or_insert(ButtonState::Released);
+
+        match (state.is_down(), down) {
+            (true, true) | (false, false) => {}
+            (false, true) => *state = ButtonState::Down,
+            (true, false) => *state = ButtonState::Up,
         }
+
         self.button_change(tree, layout, button, down)
     }
 
     fn button_change(
-        &self,
+        &mut self,
         tree: &Tree,
         layout: &Layout,
         button: MouseButton,
         down: bool,
     ) -> Handled {
-        let mouse = self.mouse.borrow();
-        let intersections = self.intersections.borrow();
         let mut resp = Handled::Bubble;
 
-        for &id in &intersections.hit {
-            if let Some(mut node) = tree.get_mut(id) {
-                let event = if down {
-                    Event::MouseHeld {
-                        button,
-                        inside: true,
-                        pos: mouse.pos.unwrap(),
-                        modifiers: self.modifiers.get(),
-                    }
-                } else {
-                    Event::MouseRelease {
-                        button,
-                        inside: true,
-                        pos: mouse.pos.unwrap(),
-                        modifiers: self.modifiers.get(),
-                    }
-                };
-                if self.event(tree, layout, id, &mut node, &event) == Handled::Sink {
-                    resp = Handled::Sink;
-                    break;
+        let mut hit = std::mem::take(&mut self.intersections.hit);
+        for &id in &hit {
+            let Some(mut node) = tree.get_mut(id) else {
+                continue;
+            };
+            let event = if down {
+                Event::MouseHeld {
+                    button,
+                    inside: true,
+                    pos: self.mouse.pos.unwrap(),
+                    modifiers: self.modifiers,
                 }
+            } else {
+                Event::MouseRelease {
+                    button,
+                    inside: true,
+                    pos: self.mouse.pos.unwrap(),
+                    modifiers: self.modifiers,
+                }
+            };
+            if self.emit(tree, layout, id, &mut node, &event) == Handled::Sink {
+                resp = Handled::Sink;
+                break;
             }
         }
+        std::mem::swap(&mut self.intersections.hit, &mut hit);
 
         for (id, interest) in layout.mouse.iter() {
-            if interest.is_mouse_outside() && intersections.hit.contains(&id) {
-                if let Some(mut node) = tree.get_mut(id) {
-                    let event = if down {
-                        Event::MouseHeld {
-                            button,
-                            inside: false,
-                            pos: mouse.pos.unwrap(),
-                            modifiers: self.modifiers.get(),
-                        }
-                    } else {
-                        Event::MouseRelease {
-                            button,
-                            inside: false,
-                            pos: mouse.pos.unwrap(),
-                            modifiers: self.modifiers.get(),
-                        }
-                    };
-
-                    self.event(tree, layout, id, &mut node, &event);
-                }
+            if !(interest.is_mouse_outside() && self.intersections.hit.contains(&id)) {
+                continue;
             }
+
+            let Some(mut node) = tree.get_mut(id) else {
+                continue;
+            };
+            let event = if down {
+                Event::MouseHeld {
+                    button,
+                    inside: false,
+                    pos: self.mouse.pos.unwrap(),
+                    modifiers: self.modifiers,
+                }
+            } else {
+                Event::MouseRelease {
+                    button,
+                    inside: false,
+                    pos: self.mouse.pos.unwrap(),
+                    modifiers: self.modifiers,
+                }
+            };
+
+            self.emit(tree, layout, id, &mut node, &event);
         }
 
         resp
     }
 
-    fn mouse_scroll(&self, tree: &Tree, layout: &Layout, pos: Pos2f, delta: Vec2f) -> Handled {
-        let intersections = self.intersections.borrow();
+    fn mouse_scroll(&mut self, tree: &Tree, layout: &Layout, pos: Pos2f, delta: Vec2f) -> Handled {
         let mut resp = Handled::Bubble;
-        for &id in &intersections.hit {
-            if let Some(mut node) = tree.get_mut(id) {
-                let event = Event::MouseScroll {
-                    pos,
-                    delta,
-                    modifiers: self.modifiers.get(),
-                };
+        let mut hit = std::mem::take(&mut self.intersections.hit);
+        for &id in &hit {
+            let Some(mut node) = tree.get_mut(id) else {
+                continue;
+            };
 
-                if self.event(tree, layout, id, &mut node, &event) == Handled::Sink {
-                    resp = Handled::Sink;
-                    break;
-                }
+            let event = Event::MouseScroll {
+                pos,
+                delta,
+                modifiers: self.modifiers,
+            };
+            if self.emit(tree, layout, id, &mut node, &event).is_sink() {
+                resp = Handled::Sink;
+                break;
             }
         }
+
+        std::mem::swap(&mut self.intersections.hit, &mut hit);
         resp
     }
 
     fn mouse_drag(
-        &self,
+        &mut self,
         tree: &Tree,
         layout: &Layout,
         origin: Pos2f,
@@ -346,28 +366,30 @@ impl Input {
         delta: Vec2f,
         button: MouseButton,
     ) -> Handled {
-        let intersections = self.intersections.borrow();
         let mut resp = Handled::Bubble;
-        for &id in &intersections.hit {
-            if let Some(mut node) = tree.get_mut(id) {
-                let event = Event::MouseDrag {
-                    origin,
-                    pos,
-                    delta,
-                    modifiers: self.modifiers.get(),
-                    button,
-                };
-                if self.event(tree, layout, id, &mut node, &event) == Handled::Sink {
-                    resp = Handled::Sink;
-                    break;
-                }
+        let mut hit = std::mem::take(&mut self.intersections.hit);
+        for &id in &hit {
+            let Some(mut node) = tree.get_mut(id) else {
+                continue;
+            };
+            let event = Event::MouseDrag {
+                origin,
+                pos,
+                delta,
+                modifiers: self.modifiers,
+                button,
+            };
+            if self.emit(tree, layout, id, &mut node, &event).is_sink() {
+                resp = Handled::Sink;
+                break;
             }
         }
+        std::mem::swap(&mut self.intersections.hit, &mut hit);
         resp
     }
 
     fn mouse_drag_release(
-        &self,
+        &mut self,
         tree: &Tree,
         layout: &Layout,
         origin: Pos2f,
@@ -375,30 +397,32 @@ impl Input {
         delta: Vec2f,
         button: MouseButton,
     ) -> Handled {
-        let intersections = self.intersections.borrow();
         let mut resp = Handled::Bubble;
-        for &id in &intersections.hit {
-            if let Some(mut node) = tree.get_mut(id) {
-                let event = Event::MouseDragRelease {
-                    origin,
-                    pos,
-                    delta,
-                    modifiers: self.modifiers.get(),
-                    button,
-                };
+        let mut hit = std::mem::take(&mut self.intersections.hit);
+        for &id in &hit {
+            let Some(mut node) = tree.get_mut(id) else {
+                continue;
+            };
 
-                if self.event(tree, layout, id, &mut node, &event) == Handled::Sink {
-                    resp = Handled::Sink;
-                    break;
-                }
+            let event = Event::MouseDragRelease {
+                origin,
+                pos,
+                delta,
+                modifiers: self.modifiers,
+                button,
+            };
+            if self.emit(tree, layout, id, &mut node, &event) == Handled::Sink {
+                resp = Handled::Sink;
+                break;
             }
         }
+        std::mem::swap(&mut self.intersections.hit, &mut hit);
         resp
     }
 
-    fn notify(&self, tree: &Tree, layout: &Layout) {
-        let mut current = self.selection.get();
-        let last = self.last_selection.get();
+    fn notify(&mut self, tree: &Tree, layout: &Layout) {
+        let mut current = self.selection;
+        let last = self.last_selection;
 
         if current == last {
             return;
@@ -406,24 +430,24 @@ impl Input {
 
         if let Some(entered) = current {
             if let Some(mut node) = tree.get_mut(entered) {
-                self.event(tree, layout, entered, &mut node, &Event::FocusGained);
+                self.emit(tree, layout, entered, &mut node, &Event::FocusGained);
             } else {
-                self.selection.set(None);
+                self.selection = None;
                 current = None;
             }
         }
 
         if let Some(exited) = last {
             if let Some(mut node) = tree.get_mut(exited) {
-                self.event(tree, layout, exited, &mut node, &Event::FocusLost);
+                self.emit(tree, layout, exited, &mut node, &Event::FocusLost);
             }
         }
 
-        self.last_selection.set(current)
+        self.last_selection = current
     }
 
-    fn event(
-        &self,
+    fn emit(
+        &mut self,
         tree: &Tree,
         layout: &Layout,
         id: WidgetId,

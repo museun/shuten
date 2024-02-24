@@ -12,6 +12,16 @@ pub enum Handled {
     Sink,
 }
 
+impl Handled {
+    pub const fn is_bubble(&self) -> bool {
+        matches!(self, Self::Bubble)
+    }
+
+    pub const fn is_sink(&self) -> bool {
+        matches!(self, Self::Sink)
+    }
+}
+
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum Event {
     MouseEnter,

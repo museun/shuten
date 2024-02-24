@@ -1,14 +1,6 @@
-use crate::{
-    geom::{
-        vec2f, Constraints, CrossAxisAlignment, FlexFit, Flow, MainAxisAlignment, MainAxisSize,
-        Vec2f,
-    },
-    layout::LayoutCtx,
-    widget::{Response, Widget},
-    WidgetExt,
-};
+use shuten::geom::{vec2f, CrossAxisAlignment, MainAxisAlignment, MainAxisSize};
 
-use super::NoResponse;
+use crate::widget::prelude::*;
 
 pub fn row(children: impl FnOnce()) -> Response {
     List::row().show(children)
@@ -222,7 +214,7 @@ impl Widget for ListWidget {
                 continue;
             }
 
-            let child_layout = ctx.layout.get_mut(child_id).unwrap();
+            let child_layout = &mut ctx.layout[child_id];
             let child_size = child_layout.rect.size();
             let child_main = direction.get_main_axis(child_size);
             let child_cross = direction.get_cross_axis(child_size);

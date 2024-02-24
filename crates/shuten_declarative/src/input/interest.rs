@@ -9,6 +9,7 @@ impl serde::Serialize for Interest {
         serializer.serialize_str(&format!("{self:?}"))
     }
 }
+
 impl Default for Interest {
     fn default() -> Self {
         Self::NONE
@@ -50,7 +51,6 @@ impl std::fmt::Debug for Interest {
     }
 }
 
-// TODO these should be using a right shift
 impl Interest {
     pub const NONE: Self = Self(0b0000_0000);
     pub const MOUSE_INSIDE: Self = Self(0b0000_0001);
