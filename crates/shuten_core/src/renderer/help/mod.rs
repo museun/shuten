@@ -4,4 +4,4 @@ mod debug;
 pub use debug::debug_frame;
 
 mod explain;
-pub use explain::explain_frame;
+pub use explain::{explain_frame, ExplainRenderer};

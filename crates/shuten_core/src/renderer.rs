@@ -9,8 +9,9 @@
 use std::io::Result;
 
 use crate::{
-    geom::Pos2,
+    geom::{vec2, Pos2, Rect},
     style::{Attribute, Rgb},
+    Canvas, Cell, Queue,
 };
 
 /// A renderer is a simple abstraction over *what* operations are done to a terminal
@@ -44,22 +45,45 @@ pub trait Renderer {
     fn write(&mut self, char: char) -> Result<()>;
 
     /// Set the title of the terminal
-    fn set_title(&mut self, title: &str) -> Result<()>;
+    fn set_title(&mut self, _title: &str) -> Result<()> {
+        Ok(())
+    }
 
     /// Hide the cursor for the terminal
-    fn hide_cursor(&mut self) -> Result<()>;
+    fn hide_cursor(&mut self) -> Result<()> {
+        Ok(())
+    }
     /// Show the cursor for the terminal
-    fn show_cursor(&mut self) -> Result<()>;
+    fn show_cursor(&mut self) -> Result<()> {
+        Ok(())
+    }
 
     /// Capture the mouse, producing mouse events
-    fn capture_mouse(&mut self) -> Result<()>;
+    fn capture_mouse(&mut self) -> Result<()> {
+        Ok(())
+    }
     /// Release the mouse, suppressing mouse events
-    fn release_mouse(&mut self) -> Result<()>;
+    fn release_mouse(&mut self) -> Result<()> {
+        Ok(())
+    }
 
     /// Enter the alternative screen
-    fn enter_alt_screen(&mut self) -> Result<()>;
+    fn enter_alt_screen(&mut self) -> Result<()> {
+        Ok(())
+    }
     /// Leave the alternative screen
-    fn leave_alt_screen(&mut self) -> Result<()>;
+    fn leave_alt_screen(&mut self) -> Result<()> {
+        Ok(())
+    }
+
+    /// Enables line wrapping
+    fn enable_line_wrap(&mut self) -> Result<()> {
+        Ok(())
+    }
+    /// Disables line wrapping
+    fn disable_line_wrap(&mut self) -> Result<()> {
+        Ok(())
+    }
 }
 
 mod null_renderer;
@@ -69,3 +93,8 @@ mod term_renderer;
 pub use term_renderer::TermRenderer;
 
 pub mod help;
+
+mod tee_renderer;
+pub use tee_renderer::TeeRenderer;
+
+pub mod metrics;

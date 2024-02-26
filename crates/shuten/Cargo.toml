@@ -11,3 +11,4 @@ serde = { version = "1.0.197", features = [ "derive" ], optional = true }
 
 [features]
 serde = [ "dep:serde", "shuten_core/serde" ]
+profiling = [ "shuten_core/profiling" ]

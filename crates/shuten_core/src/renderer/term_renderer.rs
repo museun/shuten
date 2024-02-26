@@ -25,6 +25,7 @@ where
     }
 }
 
+#[cfg_attr(feature = "profiling", profiling::all_functions)]
 impl<W> Renderer for TermRenderer<W>
 where
     W: std::io::Write,
@@ -62,7 +63,7 @@ where
 
     #[inline]
     fn set_attr(&mut self, attr: Attribute) -> std::io::Result<()> {
-        // TODO make this expansive by iteratirng from the lsb to the msb
+        // TODO make this expansive by iterating from the lsb to the msb
         if attr.is_bold() {
             self.out.write_all(b"\x1b[1m")?
         }
@@ -135,5 +136,13 @@ where
 
     fn leave_alt_screen(&mut self) -> std::io::Result<()> {
         self.out.write_all(b"\x1b[?1049l")
+    }
+
+    fn enable_line_wrap(&mut self) -> std::io::Result<()> {
+        self.out.write_all(b"\x1b[?7h")
+    }
+
+    fn disable_line_wrap(&mut self) -> std::io::Result<()> {
+        self.out.write_all(b"\x1b[?7l")
     }
 }

@@ -3,7 +3,7 @@ use std::str::FromStr;
 use super::Hsl;
 
 /// The main color type
-#[derive(Copy, Clone, Default, PartialEq, Eq, Hash)]
+#[derive(Copy, Clone, Default, PartialEq, PartialOrd, Ord, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(::serde::Serialize, ::serde::Deserialize))]
 pub struct Rgb(
     /// The red channel

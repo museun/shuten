@@ -47,6 +47,7 @@ impl Context {
     }
 
     /// Resize this [`Context`] using a provided [size](Vec2)
+    #[cfg_attr(feature = "profiling", profiling::function)]
     pub fn resize(&mut self, size: Vec2) {
         self.front.resize(size);
         self.back.resize(size);
@@ -64,6 +65,7 @@ impl Context {
     ///     - This is generally what you'd use to write things to a terminal
     /// - [`NullRenderer`](crate::renderer::NullRenderer)
     ///     - This does nothing
+    #[cfg_attr(feature = "profiling", profiling::function)]
     pub fn end_frame(&mut self, out: &mut impl Renderer) -> std::io::Result<()> {
         let mut state = CursorState::default();
         let mut seen = false;
@@ -81,8 +83,14 @@ impl Context {
                 out.move_to(pos)?;
             }
 
+            // BUG: this needs to reset if the left attribute doesn't coalesce with this one
+            if matches!(change.attr, CellAttr::New(..)) {
+                wrote_reset = true;
+                out.reset_attr()?;
+            }
+
             match state.maybe_attr(change.attr) {
-                Some(CellAttr::Attr(attr)) => {
+                Some(CellAttr::Attr(attr) | CellAttr::New(attr)) => {
                     wrote_reset = false;
                     out.set_attr(attr)?
                 }
@@ -122,9 +130,6 @@ impl Context {
             out.reset_attr()?;
 
             out.end()?;
-
-            // and swap the buffers
-            std::mem::swap(&mut self.front, &mut self.back);
         }
 
         Ok(())
@@ -139,6 +144,7 @@ struct CursorState {
     attr: Option<CellAttr>,
 }
 
+#[cfg_attr(feature = "profiling", profiling::all_functions)]
 impl CursorState {
     fn maybe_move(&mut self, pos: Pos2) -> bool {
         let should_move = match self.last {
@@ -151,6 +157,8 @@ impl CursorState {
     }
 
     fn maybe_attr(&mut self, attr: CellAttr) -> Option<CellAttr> {
+        log::info!("{attr:?} | {:?}", self.attr);
+
         match (attr, self.attr) {
             (CellAttr::Reset, None) => {
                 self.attr.replace(attr);
@@ -160,8 +168,7 @@ impl CursorState {
             _ => {}
         }
 
-        let replace = self.attr.replace(attr) != Some(attr);
-        replace.then_some(attr)
+        (self.attr.replace(attr) != Some(attr)).then_some(attr)
     }
 
     fn maybe_fg(&mut self, color: Color, resetting: bool) -> Option<Color> {
@@ -197,5 +204,142 @@ impl CursorState {
                 (prev != Some(color)).then_some(color)
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::{
+        geom::{pos2, rect, vec2},
+        style::{Attribute, Rgb},
+        Cell,
+    };
+
+    use super::*;
+
+    #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+    enum Command {
+        Begin,
+        End,
+        ClearScreen,
+        MoveTo(Pos2),
+        SetFg(Rgb),
+        SetBg(Rgb),
+        SetAttr(Attribute),
+        ResetFg,
+        ResetBg,
+        ResetAttr,
+        Write(char),
+    }
+
+    #[derive(Debug, Default, PartialEq)]
+    struct TestRenderer {
+        commands: Vec<Command>,
+    }
+
+    impl Renderer for TestRenderer {
+        fn begin(&mut self) -> std::io::Result<()> {
+            self.commands.push(Command::Begin);
+            Ok(())
+        }
+
+        fn end(&mut self) -> std::io::Result<()> {
+            self.commands.push(Command::End);
+            Ok(())
+        }
+
+        fn clear_screen(&mut self) -> std::io::Result<()> {
+            self.commands.push(Command::ClearScreen);
+            Ok(())
+        }
+
+        fn move_to(&mut self, pos: Pos2) -> std::io::Result<()> {
+            self.commands.push(Command::MoveTo(pos));
+            Ok(())
+        }
+
+        fn set_fg(&mut self, color: Rgb) -> std::io::Result<()> {
+            self.commands.push(Command::SetFg(color));
+            Ok(())
+        }
+
+        fn set_bg(&mut self, color: Rgb) -> std::io::Result<()> {
+            self.commands.push(Command::SetBg(color));
+            Ok(())
+        }
+
+        fn set_attr(&mut self, attr: Attribute) -> std::io::Result<()> {
+            self.commands.push(Command::SetAttr(attr));
+            Ok(())
+        }
+
+        fn reset_fg(&mut self) -> std::io::Result<()> {
+            self.commands.push(Command::ResetFg);
+            Ok(())
+        }
+
+        fn reset_bg(&mut self) -> std::io::Result<()> {
+            self.commands.push(Command::ResetBg);
+            Ok(())
+        }
+
+        fn reset_attr(&mut self) -> std::io::Result<()> {
+            self.commands.push(Command::ResetAttr);
+            Ok(())
+        }
+
+        fn write(&mut self, char: char) -> std::io::Result<()> {
+            self.commands.push(Command::Write(char));
+            Ok(())
+        }
+    }
+
+    struct TestContext {
+        context: Context,
+    }
+
+    impl TestContext {
+        fn new(size: Vec2) -> Self {
+            Self {
+                context: Context::new(rect(size)),
+            }
+        }
+
+        fn canvas(&mut self) -> Canvas {
+            self.context.canvas()
+        }
+
+        fn render(&mut self) -> TestRenderer {
+            let mut renderer = TestRenderer::default();
+            self.context.end_frame(&mut renderer).unwrap();
+            renderer
+        }
+    }
+
+    #[test]
+    fn attribute_cache() {
+        let mut ctx = TestContext::new(vec2(3, 3));
+
+        ctx.canvas().put(pos2(1, 1), Cell::new('a').fg(0xFF0000));
+        let a = ctx.render();
+        eprintln!("{a:#?}");
+
+        ctx.canvas().put(pos2(1, 1), Cell::new('b').fg(0x00FF00));
+        let b = ctx.render();
+        eprintln!("{b:#?}");
+
+        ctx.canvas().put(
+            pos2(1, 1),
+            Cell::new('b').fg(0x00FF00).attr(Attribute::ITALIC),
+        );
+        let c = ctx.render();
+        eprintln!("{c:#?}");
+
+        ctx.canvas().put(
+            pos2(1, 1),
+            Cell::new('b').fg(0x00FF00).attr(Attribute::BOLD),
+        );
+        let d = ctx.render();
+        eprintln!("{d:#?}");
     }
 }

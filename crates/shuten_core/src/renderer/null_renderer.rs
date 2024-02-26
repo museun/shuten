@@ -81,4 +81,12 @@ impl Renderer for NullRenderer {
     fn leave_alt_screen(&mut self) -> Result<()> {
         Ok(())
     }
+
+    fn enable_line_wrap(&mut self) -> Result<()> {
+        Ok(())
+    }
+
+    fn disable_line_wrap(&mut self) -> Result<()> {
+        Ok(())
+    }
 }

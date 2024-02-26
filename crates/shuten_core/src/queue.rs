@@ -1,4 +1,7 @@
-use std::collections::{vec_deque, VecDeque};
+use std::{
+    collections::{vec_deque, VecDeque},
+    ops::RangeBounds,
+};
 
 #[derive(Clone, Debug, PartialEq, PartialOrd, Eq)]
 pub struct Queue<T, const N: usize> {
@@ -52,6 +55,10 @@ impl<T, const N: usize> Queue<T, N> {
 
     pub fn last_mut(&mut self) -> Option<&mut T> {
         self.queue.back_mut()
+    }
+
+    pub fn drain(&mut self, range: impl RangeBounds<usize>) -> vec_deque::Drain<'_, T> {
+        self.queue.drain(range)
     }
 
     pub fn iter(&self) -> vec_deque::Iter<'_, T> {

@@ -41,6 +41,16 @@ impl Event {
     pub const fn is_quit(&self) -> bool {
         matches!(self, Self::Quit)
     }
+
+    /// Was this [`Event`] a [`Event::Invalidate`] event?
+    pub const fn is_invalidate(&self) -> bool {
+        matches!(self, Self::Invalidate(..))
+    }
+
+    /// Was this [`Event`] a [`MouseEvent::Move`]?
+    pub const fn is_mouse_move(&self) -> bool {
+        matches!(self, Self::Mouse(MouseEvent::Move { .. }, ..))
+    }
 }
 
 /// Create [`EventKind`] filters for use with [`Terminal::wait_for_event`](crate::Terminal::wait_for_event)

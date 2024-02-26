@@ -17,12 +17,22 @@ pub struct Hsl(
 impl std::fmt::Debug for Hsl {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let Self(h, s, l) = self;
-        write!(
-            f,
-            "hsl({h:.02}, {s:.02}%, {l:.02}%)",
-            s = s * 100.0,
-            l = l * 100.0
-        )
+
+        if f.alternate() {
+            write!(
+                f,
+                "hsl(\n\t{h:.02},\n\t{s:.02}%,\n\t{l:.02}%\n)",
+                s = s * 100.0,
+                l = l * 100.0
+            )
+        } else {
+            write!(
+                f,
+                "hsl({h:.02}, {s:.02}%, {l:.02}%)",
+                s = s * 100.0,
+                l = l * 100.0
+            )
+        }
     }
 }
 

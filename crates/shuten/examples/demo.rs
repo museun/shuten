@@ -8,7 +8,7 @@ use shuten_core::{
 };
 
 fn main() -> std::io::Result<()> {
-    let mut terminal = Terminal::new(Config::default().fixed_timer(30.0))?;
+    let mut terminal = Terminal::new(Config::default().fixed_timer(60.0))?;
 
     let mut vista = Vista::default();
     let mut sinebows = [Sinebow { pos: 0.0 }, Sinebow { pos: 120.0 }];

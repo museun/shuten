@@ -144,4 +144,12 @@ impl Renderer for DebugRenderer {
     fn leave_alt_screen(&mut self) -> Result<()> {
         self.0.leave_alt_screen()
     }
+
+    fn enable_line_wrap(&mut self) -> Result<()> {
+        self.0.enable_line_wrap()
+    }
+
+    fn disable_line_wrap(&mut self) -> Result<()> {
+        self.0.disable_line_wrap()
+    }
 }

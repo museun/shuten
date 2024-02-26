@@ -1,4 +1,4 @@
-use super::Rgb;
+use super::{Hsl, Rgb};
 
 /// A color type thats used extensively in this crate
 ///
@@ -70,5 +70,23 @@ impl From<Option<Self>> for Color {
 impl From<&Self> for Color {
     fn from(value: &Self) -> Self {
         *value
+    }
+}
+
+impl From<Hsl> for Color {
+    fn from(value: Hsl) -> Self {
+        Self::Rgb(value.into())
+    }
+}
+
+impl From<&Hsl> for Color {
+    fn from(value: &Hsl) -> Self {
+        Self::Rgb(value.into())
+    }
+}
+
+impl From<Option<Hsl>> for Color {
+    fn from(value: Option<Hsl>) -> Self {
+        value.map(Into::into).map(Self::Rgb).unwrap_or(Self::Reset)
     }
 }

@@ -1,5 +1,5 @@
 /// Attributes to apply to text
-#[derive(Copy, Clone, Default, PartialEq, Eq)]
+#[derive(Copy, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Attribute(pub u8);
 
 #[cfg(feature = "serde")]

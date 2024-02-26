@@ -1,4 +1,5 @@
 /// Key modifiers attached to an [`Event`](crate::event::Event)
+// TODO this partial eq needs to use 'any' rather than 'all' logic
 #[derive(Copy, Clone, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct Modifiers(pub u8);
 

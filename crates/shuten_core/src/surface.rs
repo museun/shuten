@@ -13,7 +13,7 @@ pub use cell::{Cell, CellAttr};
 ///
 /// This is generally a lower-level type, normally you'd interact with the
 /// `Surface` via the [`Context`](crate::Context) and [`Canvas`] types
-#[derive(Debug, Default)]
+#[derive(Debug, Clone, Default, PartialEq)]
 pub struct Surface {
     pub(crate) cells: Vec<Cell>,
     size: Vec2,
@@ -27,6 +27,7 @@ impl Surface {
     }
 
     /// Resize the surface to a new size
+    #[cfg_attr(feature = "profiling", profiling::function)]
     pub fn resize(&mut self, size: Vec2) {
         *self = Self::new(size)
     }
@@ -39,29 +40,22 @@ impl Surface {
     /// Generate a diff of two surfaces, yielding the [locations](pos2) and [`Cell`]s that are different
     ///
     /// This mutates the original cell to cache future changes
-    pub fn diff<'a>(&'a self, other: &'a Self) -> impl Iterator<Item = (Pos2, Cell)> + '_ {
+    #[cfg_attr(feature = "profiling", profiling::function)]
+    pub fn diff<'a>(&'a mut self, other: &'a Self) -> impl Iterator<Item = (Pos2, Cell)> + '_ {
         // TODO skip to the first change
         // TODO stop at the last change
         self.cells
-            .iter()
+            .iter_mut()
             .zip(other.cells.iter().copied())
             .enumerate()
-            .filter_map(|(i, (left, right)): (usize, (&Cell, Cell))| {
-                if Self::filter_cell(left, &right) {
+            .filter_map(|(i, (left, right)): (usize, (&mut Cell, Cell))| {
+                if *left == right || (right.fg == Color::Reuse && right.bg == Color::Reuse) {
                     return None;
                 }
+
+                *left = right;
                 Some((index_to_pos(i, self.size.x), right))
             })
-    }
-
-    fn filter_cell(left: &Cell, right: &Cell) -> bool {
-        if left.char != right.char {
-            return false;
-        }
-        if right.fg != Color::Reuse || right.bg != Color::Reuse {
-            return false;
-        }
-        right.fg == left.fg && right.bg == left.bg
     }
 }
 

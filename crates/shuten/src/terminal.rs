@@ -14,7 +14,10 @@ use crate::{
 
 use shuten_core::{
     geom::{self, Rect, Vec2},
-    renderer::{Renderer, TermRenderer},
+    renderer::{
+        metrics::{FrameStats, MetricsRenderer},
+        Renderer, TermRenderer,
+    },
     style::Color,
     Canvas, Context, Surface,
 };
@@ -97,16 +100,57 @@ impl Terminal {
         self.context.canvas()
     }
 
+    /// Get the internal writer for this terminal
+    pub fn get_writer(&mut self) -> &mut impl std::io::Write {
+        &mut self.out
+    }
+
     /// Flush any pending changes to a [`TermRenderer`]
     pub fn flush(&mut self) -> std::io::Result<()> {
         self.context
             .end_frame(&mut TermRenderer::new(&mut self.out))
     }
 
+    /// Flush this frame and record the metrics
+    pub fn flush_with_metrics<const N: usize>(
+        &mut self,
+        stats: &mut FrameStats<N>,
+    ) -> std::io::Result<()> {
+        self.context.end_frame(&mut MetricsRenderer::new(
+            stats,
+            TermRenderer::new(&mut self.out),
+        ))
+    }
+
     /// Gives you a closure with a [`Canvas`] and calls [`Flush`](Self::flush) after it returns
     pub fn paint(&mut self, mut frame: impl FnMut(Canvas<'_>)) -> std::io::Result<()> {
         frame(self.context.canvas());
         self.flush()
+    }
+
+    /// Paint the current frame with provided metrics
+    ///
+    /// ***NOTE*** The metrics pass back to you are from the _previous_ frame
+    pub fn paint_with_metrics<const N: usize>(
+        &mut self,
+        stats: &mut FrameStats<N>,
+        mut frame: impl FnMut(Canvas<'_>, &mut FrameStats<N>),
+    ) -> std::io::Result<()> {
+        frame(self.context.canvas(), stats);
+        self.flush_with_metrics(stats)
+    }
+
+    /// Get a reference to the writer and the current context
+    ///
+    /// This is useful for doing custom renderering
+    pub fn with_writer_and_context(
+        &mut self,
+        mut with: impl FnMut(
+            &mut std::io::BufWriter<std::io::Stdout>,
+            &mut Context,
+        ) -> std::io::Result<()>,
+    ) -> std::io::Result<()> {
+        with(&mut self.out, &mut self.context)
     }
 }
 
@@ -213,9 +257,15 @@ impl Terminal {
 
     /// Leave the alternative screen, if in it
     pub fn leave_alt_screen(&self) -> std::io::Result<()> {
+        // TODO ensure mouse_capture / line_wrap stay synchronized
         if self.is_in_alt_screen() {
             self.config.mutate(|c| c.use_alt_screen = false);
-            self.immediate(|mut p| p.leave_alt_screen())?
+            self.immediate(|mut p| {
+                p.clear_screen()?;
+                p.leave_alt_screen()?;
+                p.release_mouse()?;
+                p.disable_line_wrap()
+            })?
         }
         Ok(())
     }
@@ -223,9 +273,12 @@ impl Terminal {
     /// Enter the alternative screen, if not in it
     pub fn enter_alt_screen(&self) -> std::io::Result<()> {
         if !self.is_in_alt_screen() {
+            // TODO ensure mouse_capture / line_wrap stay synchronized
             self.config.mutate(|c| c.use_alt_screen = true);
             self.immediate(|mut p| {
                 p.enter_alt_screen()?;
+                p.capture_mouse()?;
+                p.enable_line_wrap()?;
                 p.clear_screen()
             })?;
         }

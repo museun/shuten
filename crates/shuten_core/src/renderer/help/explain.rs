@@ -62,7 +62,7 @@ pub struct ExplainRenderer<W> {
 }
 
 impl<W: std::io::Write> ExplainRenderer<W> {
-    const fn new(out: W) -> Self {
+    pub const fn new(out: W) -> Self {
         Self {
             out,
             incomplete: false,
@@ -166,6 +166,14 @@ impl<W: std::io::Write> Renderer for ExplainRenderer<W> {
     }
 
     fn leave_alt_screen(&mut self) -> std::io::Result<()> {
+        Ok(())
+    }
+
+    fn enable_line_wrap(&mut self) -> std::io::Result<()> {
+        Ok(())
+    }
+
+    fn disable_line_wrap(&mut self) -> std::io::Result<()> {
         Ok(())
     }
 }
