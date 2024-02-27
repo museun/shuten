@@ -1,19 +1,9 @@
 use crate::style::{Attribute, Color};
 
-#[derive(Copy, Clone, Debug, Eq)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub enum CellAttr {
     Attr(Attribute),
-    New(Attribute),
     Reset,
-}
-
-impl PartialEq for CellAttr {
-    fn eq(&self, other: &Self) -> bool {
-        match (self, other) {
-            (Self::Attr(l) | Self::New(l), Self::Attr(r) | Self::New(r)) => l == r,
-            _ => core::mem::discriminant(self) == core::mem::discriminant(other),
-        }
-    }
 }
 
 /// Cells are written to the [`Surface`](crate::Surface) and interpreted by a [`Context`](crate::Context) and used by a [`Canvas`](crate::Canvas)

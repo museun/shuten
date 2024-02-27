@@ -6,7 +6,6 @@ pub struct Term<'a> {
     pub(crate) quit: &'a mut bool,
     pub(crate) terminal: &'a mut Terminal,
     pub(crate) application: &'a Application,
-
     pub(crate) blend: Option<f32>,
 }
 
