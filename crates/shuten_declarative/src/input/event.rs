@@ -27,7 +27,7 @@ pub enum Event {
     MouseEnter,
     MouseLeave,
     MouseMoved {
-        pos: Option<Pos2f>,
+        pos: Pos2f,
     },
     MouseScroll {
         pos: Pos2f,
@@ -81,7 +81,7 @@ impl Event {
 
     pub const fn mouse_position(&self) -> Option<Pos2f> {
         match self {
-            Self::MouseMoved { pos: Some(pos) }
+            Self::MouseMoved { pos }
             | Self::MouseScroll { pos, .. }
             | Self::MouseDrag { pos, .. }
             | Self::MouseDragRelease { pos, .. }

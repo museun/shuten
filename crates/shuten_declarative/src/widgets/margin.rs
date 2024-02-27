@@ -24,13 +24,12 @@ impl Widget for MarginWidget {
             max: (input.max - margin).max(Vec2f::ZERO),
         };
 
-        let mut this = Vec2f::ZERO;
+        let mut size = Vec2f::ZERO;
         for &child in &node.children {
-            this = ctx.calculate(child, constraints) + margin;
+            size = ctx.calculate(child, constraints) + margin;
             ctx.layout.set_pos(child, offset);
         }
-        this = this.max(margin);
-        constraints.constrain_min(this)
+        constraints.constrain_min(size.max(margin))
     }
 }
 

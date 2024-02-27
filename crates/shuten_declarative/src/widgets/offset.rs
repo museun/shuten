@@ -3,7 +3,7 @@ use shuten::geom::Pos2f;
 use crate::widget::prelude::*;
 
 #[derive(Default, Debug)]
-struct Offset {
+pub struct Offset {
     pos: Pos2f,
 }
 

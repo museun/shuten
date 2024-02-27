@@ -1,7 +1,7 @@
 use shuten::event::Modifiers;
 
 use crate::{
-    input::{KeyEventKind, Keybind},
+    input::{Key, Keybind},
     widget::prelude::*,
 };
 
@@ -32,7 +32,7 @@ impl KeyboardArea {
 #[derive(Default, Debug)]
 struct KeyboardWidget {
     props: KeyboardArea,
-    key: Option<KeyEventKind>,
+    key: Option<Key>,
     modifiers: Option<Modifiers>,
 }
 
@@ -43,9 +43,8 @@ impl Widget for KeyboardWidget {
     fn update(&mut self, props: Self::Props<'_>) -> Self::Response {
         self.props = props;
         let modifiers = self.modifiers.take().unwrap_or_default();
-        KeyResponse {
-            keybind: self.key.take().map(|key| Keybind::new(key, modifiers)),
-        }
+        let keybind = self.key.take().map(|key| Keybind::new(key, modifiers));
+        KeyResponse { keybind }
     }
 
     fn interest(&self) -> Interest {
@@ -57,7 +56,6 @@ impl Widget for KeyboardWidget {
             self.key = Some(key.kind);
             self.modifiers = Some(modifiers);
         }
-
         Handled::Bubble
     }
 }
@@ -66,6 +64,6 @@ pub fn keyboard_area(children: impl FnOnce()) -> Response<KeyResponse> {
     KeyboardArea.show_children(children)
 }
 
-pub fn key_pressed(keybind: Keybind) -> bool {
-    KeyboardArea.show().is_keybind(keybind)
+pub fn key_pressed(keybind: impl Into<Keybind>) -> bool {
+    KeyboardArea.show().is_keybind(keybind.into())
 }

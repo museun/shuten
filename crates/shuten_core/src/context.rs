@@ -157,7 +157,7 @@ impl CursorState {
     }
 
     fn maybe_attr(&mut self, attr: CellAttr) -> Option<CellAttr> {
-        log::info!("{attr:?} | {:?}", self.attr);
+        // log::info!("{attr:?} | {:?}", self.attr);
 
         match (attr, self.attr) {
             (CellAttr::Reset, None) => {
@@ -314,32 +314,5 @@ mod tests {
             self.context.end_frame(&mut renderer).unwrap();
             renderer
         }
-    }
-
-    #[test]
-    fn attribute_cache() {
-        let mut ctx = TestContext::new(vec2(3, 3));
-
-        ctx.canvas().put(pos2(1, 1), Cell::new('a').fg(0xFF0000));
-        let a = ctx.render();
-        eprintln!("{a:#?}");
-
-        ctx.canvas().put(pos2(1, 1), Cell::new('b').fg(0x00FF00));
-        let b = ctx.render();
-        eprintln!("{b:#?}");
-
-        ctx.canvas().put(
-            pos2(1, 1),
-            Cell::new('b').fg(0x00FF00).attr(Attribute::ITALIC),
-        );
-        let c = ctx.render();
-        eprintln!("{c:#?}");
-
-        ctx.canvas().put(
-            pos2(1, 1),
-            Cell::new('b').fg(0x00FF00).attr(Attribute::BOLD),
-        );
-        let d = ctx.render();
-        eprintln!("{d:#?}");
     }
 }

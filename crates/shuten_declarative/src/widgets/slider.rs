@@ -164,6 +164,7 @@ impl Widget for SliderWidget {
     }
 }
 
+// BUG: the smoothing in this is garbage for small ranges
 pub fn slider(value: f32, min: f32, max: f32) -> Response<SliderResponse> {
     Slider::new(value, min, max).show()
 }

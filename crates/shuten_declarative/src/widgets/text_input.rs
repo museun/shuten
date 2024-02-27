@@ -88,8 +88,7 @@ impl Widget for TextInputWidget {
     }
 
     fn event(&mut self, ctx: EventCtx<'_>, event: &Event) -> Handled {
-        use crate::input::KeyEventKind as E;
-
+        use crate::input::Key as E;
         if let Event::MouseRelease {
             inside: true,
             button: MouseButton::Primary,

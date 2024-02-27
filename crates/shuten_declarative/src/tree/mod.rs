@@ -95,6 +95,7 @@ impl Tree {
         RefMut::filter_map(nodes, |nodes| nodes.get_mut(id)).ok()
     }
 
+    #[profiling::function]
     pub fn widget<T: Widget>(&self, props: T::Props<'_>) -> Response<T::Response> {
         let resp = self.begin_widget::<T>(props);
         self.end_widget(resp.id());
@@ -102,6 +103,7 @@ impl Tree {
     }
 }
 
+#[profiling::all_functions]
 impl Tree {
     pub(crate) fn start(&self) {
         let mut nodes = self.inner.nodes.borrow_mut();
@@ -138,6 +140,8 @@ impl Tree {
             _ => unreachable!("expected to get {}", widget.type_name()),
         };
         self.inner.nodes.borrow_mut().get_mut(id).unwrap().widget = widget;
+        // TODO this should force child: impl FnOnce() -> R
+        // and wrap it
         Response::new(id, resp)
     }
 
@@ -171,6 +175,7 @@ impl Tree {
     }
 }
 
+#[profiling::all_functions]
 impl Tree {
     fn next_existing_widget(
         nodes: &mut SlotMap<WidgetId, Node>,

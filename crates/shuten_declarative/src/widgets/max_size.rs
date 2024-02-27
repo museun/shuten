@@ -7,6 +7,12 @@ pub struct MaxSize {
     max_size: Vec2f,
 }
 
+impl Default for MaxSize {
+    fn default() -> Self {
+        Self::new(Vec2f::splat(f32::INFINITY))
+    }
+}
+
 impl MaxSize {
     pub const fn new(max_size: Vec2f) -> Self {
         Self { max_size }
@@ -17,17 +23,9 @@ impl MaxSize {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 struct MaxSizeWidget {
     props: MaxSize,
-}
-
-impl Default for MaxSizeWidget {
-    fn default() -> Self {
-        Self {
-            props: MaxSize::new(Vec2f::splat(f32::INFINITY)),
-        }
-    }
 }
 
 impl Widget for MaxSizeWidget {
@@ -39,7 +37,7 @@ impl Widget for MaxSizeWidget {
     }
 
     fn layout(&self, mut ctx: LayoutCtx<'_>, input: Constraints) -> Vec2f {
-        let constraint = Constraints::loose(input.max.min(dbg!(self.props.max_size)));
+        let constraint = Constraints::loose(input.max.min(self.props.max_size));
         let node = ctx.tree.get_current();
         let mut size = Vec2f::ZERO;
         for &child in &node.children {

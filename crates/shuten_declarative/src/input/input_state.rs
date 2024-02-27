@@ -24,6 +24,7 @@ pub struct Input {
     intersections: Intersections,
     selection: Cell<Option<WidgetId>>,
     last_selection: Cell<Option<WidgetId>>,
+    last_event: Option<CoreEvent>,
 }
 
 impl Input {
@@ -41,8 +42,45 @@ impl Input {
         Self::default()
     }
 
+    pub(crate) fn last_event(&self) -> Option<&CoreEvent> {
+        self.last_event.as_ref()
+    }
+
     pub(crate) fn start(&self, tree: &Tree, layout: &Layout) {
-        self.notify(tree, layout)
+        // notify the focused element if they've gained or lost focus
+        let mut current = self.selection.get();
+        let last = self.last_selection.get();
+
+        if current == last {
+            return;
+        }
+
+        if let Some(entered) = current {
+            if let Some(mut node) = tree.get_mut(entered) {
+                let ctx = EventCtx {
+                    tree,
+                    layout,
+                    input: self,
+                };
+                Self::emit(ctx, entered, &mut node, &Event::FocusGained);
+            } else {
+                self.selection.set(None);
+                current = None;
+            }
+        }
+
+        if let Some(exited) = last {
+            if let Some(mut node) = tree.get_mut(exited) {
+                let ctx = EventCtx {
+                    tree,
+                    layout,
+                    input: self,
+                };
+                Self::emit(ctx, exited, &mut node, &Event::FocusLost);
+            }
+        }
+
+        self.last_selection.set(current)
     }
 
     pub(crate) fn finish(&mut self) {
@@ -52,6 +90,8 @@ impl Input {
     }
 
     pub(crate) fn handle(&mut self, tree: &Tree, layout: &Layout, event: &CoreEvent) -> Handled {
+        self.last_event.replace(*event);
+
         match event {
             CoreEvent::Mouse(ev, modifiers) => {
                 self.update_modifiers(*modifiers);
@@ -155,20 +195,25 @@ impl Input {
             return Handled::Bubble;
         };
 
-        for (id, _) in layout.keyboard.iter() {
-            if let Some(mut node) = tree.get_mut(id) {
-                let event = Event::KeyChanged {
-                    key,
-                    modifiers: self.modifiers,
-                };
-                // TODO this swallows focused events
+        let event = Event::KeyChanged {
+            key,
+            modifiers: self.modifiers,
+        };
 
-                let ctx = EventCtx {
-                    tree,
-                    layout,
-                    input: self,
-                };
-                return Self::emit(ctx, id, &mut node, &event);
+        let mut resp = Handled::Bubble;
+        for (id, _) in layout.keyboard.iter() {
+            let Some(mut node) = tree.get_mut(id) else {
+                continue;
+            };
+
+            let ctx = EventCtx {
+                tree,
+                layout,
+                input: self,
+            };
+            resp = Self::emit(ctx, id, &mut node, &event);
+            if resp.is_sink() {
+                break;
             }
         }
 
@@ -179,10 +224,6 @@ impl Input {
 
             if node.interest.is_focus_input() {
                 let mut node = tree.get_mut(id).unwrap();
-                let event = Event::KeyChanged {
-                    key,
-                    modifiers: self.modifiers,
-                };
                 let ctx = EventCtx {
                     tree,
                     layout,
@@ -192,7 +233,7 @@ impl Input {
             }
         }
 
-        Handled::Bubble
+        resp
     }
 
     pub fn update_modifiers(&mut self, modifiers: Modifiers) {
@@ -200,7 +241,7 @@ impl Input {
     }
 
     pub fn mouse_moved(&mut self, tree: &Tree, layout: &Layout, pos: Pos2f) {
-        let _ = self.mouse.pos.replace(pos);
+        self.mouse.pos = pos;
 
         let event = Event::MouseMoved {
             pos: self.mouse.pos,
@@ -222,9 +263,7 @@ impl Input {
 
         // do a hit test
         self.intersections.hit.clear();
-        if let Some(pos) = self.mouse.pos {
-            Self::hit_test(tree, layout, pos, &mut self.intersections.hit)
-        }
+        Self::hit_test(tree, layout, pos, &mut self.intersections.hit);
 
         // send mouse enter event
         for &hit in &self.intersections.hit {
@@ -298,14 +337,14 @@ impl Input {
             Event::MouseHeld {
                 button,
                 inside: false,
-                pos: self.mouse.pos.unwrap(),
+                pos: self.mouse.pos,
                 modifiers: self.modifiers,
             }
         } else {
             Event::MouseRelease {
                 button,
                 inside: false,
-                pos: self.mouse.pos.unwrap(),
+                pos: self.mouse.pos,
                 modifiers: self.modifiers,
             }
         };
@@ -348,42 +387,6 @@ impl Input {
             }
         }
         resp
-    }
-
-    fn notify(&self, tree: &Tree, layout: &Layout) {
-        let mut current = self.selection.get();
-        let last = self.last_selection.get();
-
-        if current == last {
-            return;
-        }
-
-        if let Some(entered) = current {
-            if let Some(mut node) = tree.get_mut(entered) {
-                let ctx = EventCtx {
-                    tree,
-                    layout,
-                    input: self,
-                };
-                Self::emit(ctx, entered, &mut node, &Event::FocusGained);
-            } else {
-                self.selection.set(None);
-                current = None;
-            }
-        }
-
-        if let Some(exited) = last {
-            if let Some(mut node) = tree.get_mut(exited) {
-                let ctx = EventCtx {
-                    tree,
-                    layout,
-                    input: self,
-                };
-                Self::emit(ctx, exited, &mut node, &Event::FocusLost);
-            }
-        }
-
-        self.last_selection.set(current)
     }
 
     fn emit(ctx: EventCtx, id: WidgetId, node: &mut Node, event: &Event) -> Handled {

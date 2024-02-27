@@ -5,7 +5,7 @@ use shuten::{event::MouseButton, geom::Pos2f};
 
 #[derive(Debug, Default, serde::Serialize)]
 pub struct Mouse {
-    pub pos: Option<Pos2f>,
+    pub pos: Pos2f,
     pub buttons: HashMap<MouseButton, ButtonState>,
 }
 

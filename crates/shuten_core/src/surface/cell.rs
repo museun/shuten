@@ -103,3 +103,9 @@ impl Cell {
         self
     }
 }
+
+impl From<char> for Cell {
+    fn from(value: char) -> Self {
+        Self::new(value)
+    }
+}

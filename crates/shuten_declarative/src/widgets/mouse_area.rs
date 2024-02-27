@@ -11,6 +11,15 @@ pub struct MouseAreaResponse {
     pub scrolled: Option<f32>,
 }
 
+#[derive(Debug)]
+pub struct MouseArea;
+
+impl MouseArea {
+    pub fn show(self, children: impl FnOnce()) -> Response<MouseAreaResponse> {
+        MouseAreaWidget::show_children(children, self)
+    }
+}
+
 #[derive(Default, Debug)]
 struct MouseAreaWidget {
     state: MouseState,
@@ -28,7 +37,7 @@ enum MouseState {
 }
 
 impl Widget for MouseAreaWidget {
-    type Props<'a> = ();
+    type Props<'a> = MouseArea;
     type Response = MouseAreaResponse;
 
     fn update(&mut self, _: Self::Props<'_>) -> Self::Response {
@@ -74,5 +83,5 @@ impl Widget for MouseAreaWidget {
 }
 
 pub fn mouse_area(children: impl FnOnce()) -> Response<MouseAreaResponse> {
-    MouseAreaWidget::show_children(children, ())
+    MouseArea.show(children)
 }

@@ -13,7 +13,7 @@ mod keybind;
 pub use keybind::Keybind;
 
 mod key_event;
-pub use key_event::{KeyEvent, KeyEventKind, TranslateKeyEvent};
+pub use key_event::{Key, KeyEvent, TranslateKeyEvent};
 
 mod mouse_event;
 pub use mouse_event::{MouseEvent, TranslateMouseEvent};

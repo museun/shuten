@@ -1,4 +1,4 @@
-use shuten::{geom::Rectf, Terminal};
+use shuten::{geom::Rectf, renderer::metrics::FrameStats, Terminal};
 
 use crate::Application;
 
@@ -8,6 +8,8 @@ pub struct Term<'a> {
     pub(crate) application: &'a Application,
     pub(crate) frame_count: u64,
     pub(crate) blend: Option<f32>,
+    pub frame_stats: &'a mut FrameStats<30>,
+    pub dump_render: &'a mut bool,
 }
 
 impl<'a> Term<'a> {

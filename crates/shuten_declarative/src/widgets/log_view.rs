@@ -1,3 +1,4 @@
+use shuten::geom::Margin;
 use shuten::Queue;
 
 use crate::input::Keybind;
@@ -5,6 +6,8 @@ use crate::logger::{LogItem, Logger};
 
 use crate::widget::prelude::*;
 use crate::widgets::{container, scrollable::scrollable, toggle_bind};
+
+use super::{float, margin};
 
 #[derive(Debug)]
 pub struct LogView;
@@ -50,10 +53,14 @@ impl Widget for LogViewWidget {
     }
 }
 
-pub fn log_view(keybind: Keybind) -> Response<NoResponse> {
+pub fn log_view(keybind: impl Into<Keybind>) -> Response<NoResponse> {
     toggle_bind(keybind, || {
-        container(0x292353, || {
-            LogView.show();
+        float(|| {
+            margin(Margin::symmetric(4, 1), || {
+                container(0x292353, || {
+                    LogView.show();
+                });
+            });
         });
     })
     .map(drop)

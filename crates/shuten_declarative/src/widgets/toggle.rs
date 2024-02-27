@@ -1,5 +1,5 @@
 use crate::{
-    input::{KeyEventKind, Keybind},
+    input::{Key, Keybind},
     widget::prelude::*,
 };
 
@@ -34,7 +34,7 @@ struct ToggleWidget {
 impl Default for ToggleWidget {
     fn default() -> Self {
         Self {
-            props: Toggle::new(KeyEventKind::Escape),
+            props: Toggle::new(Key::Escape),
             shown: false,
         }
     }
@@ -65,7 +65,8 @@ impl Widget for ToggleWidget {
 
     fn layout(&self, ctx: LayoutCtx<'_>, input: Constraints) -> Vec2f {
         if !self.shown {
-            // TODO hide children
+            let widget = ctx.tree.get_current();
+            ctx.layout.hide_many(ctx.tree, widget.children());
             return Vec2f::ZERO;
         }
         self.default_layout(ctx, input)
@@ -79,6 +80,9 @@ impl Widget for ToggleWidget {
     }
 }
 
-pub fn toggle_bind(keybind: Keybind, children: impl FnOnce()) -> Response<ToggleResponse> {
+pub fn toggle_bind(
+    keybind: impl Into<Keybind>,
+    children: impl FnOnce(),
+) -> Response<ToggleResponse> {
     Toggle::new(keybind).show(children)
 }

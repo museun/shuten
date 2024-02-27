@@ -1,4 +1,10 @@
-use shuten::{event::Event, Terminal};
+use std::io::Write;
+
+use shuten::{
+    event::Event,
+    renderer::{help::ExplainRenderer, metrics::FrameStats, TeeRenderer, TermRenderer},
+    Terminal,
+};
 pub use shuten::{
     event::{Key, Modifiers, MouseButton},
     geom,
@@ -37,6 +43,12 @@ pub fn debug_run<R>(
     debug: bool,
     mut ui: impl FnMut(Term<'_>) -> R,
 ) -> std::io::Result<()> {
+    profiling::register_thread!("shuten");
+
+    let server_addr = format!("127.0.0.1:{}", puffin_http::DEFAULT_PORT);
+    let _puffin_server = puffin_http::Server::new(&server_addr).unwrap();
+    profiling::puffin::set_scopes_on(true);
+
     let mut terminal = Terminal::new(config)?;
     let mut application = Application::new(terminal.rect());
 
@@ -45,13 +57,18 @@ pub fn debug_run<R>(
     let mut quit = false;
     let mut frame_count = 0;
     let mut last_blend = None;
+    let mut dump_render = false;
 
     let (tx, rx) = std::sync::mpsc::channel::<Vec<_>>();
     if debug {
         start_view_server(rx);
     }
 
+    let mut out = std::fs::File::create("render.txt").unwrap();
+
+    let mut stats = <FrameStats<30>>::new();
     while let Ok(ev) = terminal.wait_for_next_event() {
+        profiling::scope!("event");
         if ev.is_quit() {
             break;
         }
@@ -63,15 +80,21 @@ pub fn debug_run<R>(
         application.start();
         application.handle(ev);
 
-        let _ = ui(Term {
-            terminal: &mut terminal,
-            quit: &mut quit,
-            application: &application,
-            frame_count,
-            blend: using_fixed_timer.then_some(last_blend).flatten(),
-        });
+        {
+            profiling::scope!("call ui");
+            let _ = ui(Term {
+                terminal: &mut terminal,
+                quit: &mut quit,
+                application: &application,
+                frame_count,
+                blend: using_fixed_timer.then_some(last_blend).flatten(),
+                dump_render: &mut dump_render,
+                frame_stats: &mut stats,
+            });
+        }
 
         if debug {
+            profiling::scope!("send debug frame");
             let data = serde_json::to_vec(&typed_json::json!({
                 "frame": frame_count,
                 "shuten": &application
@@ -85,10 +108,35 @@ pub fn debug_run<R>(
         application.finish();
 
         if terminal.is_in_alt_screen() {
-            terminal.paint(|mut canvas| {
-                canvas.fill(Color::Reset);
-                application.paint(canvas);
-            })?;
+            if dump_render {
+                {
+                    let mut canvas = terminal.canvas();
+                    canvas.fill(Color::Reset);
+                    application.paint(canvas);
+                }
+
+                let mut buf = vec![];
+                terminal.with_writer_and_context(|writer, context| {
+                    let mut explain = TeeRenderer::new(
+                        ExplainRenderer::new(&mut buf), //
+                        TermRenderer::new(writer),
+                    );
+                    context.end_frame(&mut explain)
+                })?;
+
+                out.write_all(&buf).unwrap();
+                out.flush().unwrap();
+            } else {
+                profiling::scope!("terminal paint");
+                let mut canvas = terminal.canvas();
+                {
+                    profiling::scope!("render");
+                    canvas.fill(Color::Reset);
+                    application.paint(canvas);
+                }
+                profiling::scope!("flush");
+                terminal.flush_with_metrics(&mut stats)?;
+            }
         }
 
         if quit {
@@ -96,6 +144,7 @@ pub fn debug_run<R>(
         }
 
         frame_count += 1;
+        profiling::finish_frame!();
     }
 
     Ok(())
@@ -108,7 +157,7 @@ fn start_view_server(rx: std::sync::mpsc::Receiver<Vec<u8>>) {
         loop {
             if let Ok((client, _)) = server.accept() {
                 if handle(client, &mut rx).is_err() {
-                    break;
+                    continue;
                 }
             }
 

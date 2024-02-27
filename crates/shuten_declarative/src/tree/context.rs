@@ -23,6 +23,7 @@ pub fn unbind() {
     })
 }
 
+#[profiling::function]
 pub fn current_tree() -> Tree {
     CONTEXT.with(|c| {
         c.borrow()

@@ -7,10 +7,11 @@ use shuten::{
 
 use crate::widget::prelude::*;
 
-use super::{margin::margin, ColorBox, Label};
+use super::{container, margin::margin, Label};
 
 #[derive(Clone, Debug)]
 pub struct Button {
+    // TODO this should be a `Label`
     label: Cow<'static, str>,
     margin: Margin,
     fg: Color,
@@ -108,15 +109,15 @@ impl Widget for ButtonWidget {
             _ => {}
         }
 
-        ColorBox::new(color, Vec2f::ZERO).show_children(|| {
+        container(color, || {
             margin(self.props.margin, || {
                 Label::new(&*self.props.label).fg(self.props.fg).show();
             });
         });
 
-        let clicked = self.clicked;
-        self.clicked = false;
-        ButtonResponse { clicked }
+        ButtonResponse {
+            clicked: std::mem::take(&mut self.clicked),
+        }
     }
 
     fn interest(&self) -> Interest {

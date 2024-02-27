@@ -1,3 +1,5 @@
+use std::borrow::Cow;
+
 use shuten::Canvas;
 
 use crate::{
@@ -73,5 +75,9 @@ where
     #[must_use]
     pub fn cropped_canvas(&mut self) -> Canvas {
         self.canvas.crop(self.rect.into())
+    }
+
+    pub fn debug_text(&mut self, data: impl Into<Cow<'static, str>>) {
+        self.paint.debug_layer.push(data.into());
     }
 }

@@ -54,7 +54,7 @@ pub trait Widget: 'static + Default + std::fmt::Debug {
 
     #[allow(unused)]
     fn event(&mut self, ctx: EventCtx<'_>, event: &Event) -> Handled {
-        Handled::default()
+        Handled::Bubble
     }
 
     fn layout(&self, ctx: LayoutCtx<'_>, input: Constraints) -> Vec2f {

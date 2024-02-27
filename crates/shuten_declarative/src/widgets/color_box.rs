@@ -57,10 +57,7 @@ impl Widget for ColorBoxWidget {
 
     fn paint(&self, mut ctx: PaintCtx<'_, '_>) {
         ctx.cropped_canvas().fill(self.props.color);
-        let node = ctx.tree.get_current();
-        for &child in &node.children {
-            ctx.paint(child)
-        }
+        self.default_paint(ctx)
     }
 }
 

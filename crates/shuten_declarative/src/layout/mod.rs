@@ -17,7 +17,7 @@ mod node;
 pub use node::Node;
 use slotmap::SecondaryMap;
 
-#[derive(serde::Serialize)]
+#[derive(serde::Serialize, Default)]
 pub struct Layout {
     pub(crate) mouse: Mouse,
     pub(crate) keyboard: Keyboard,
@@ -43,16 +43,9 @@ impl std::fmt::Debug for Layout {
 impl Layout {
     pub fn new(rect: Rectf) -> Self {
         Self {
-            nodes: SecondaryMap::new(),
-            clip_stack: Vec::new(),
-            mouse: Mouse::default(),
-            keyboard: Keyboard::default(),
             rect,
+            ..Self::default()
         }
-    }
-
-    pub fn resize(&mut self, rect: Rectf) {
-        self.rect = rect;
     }
 
     pub fn get(&self, id: WidgetId) -> Option<&Node> {
@@ -65,7 +58,7 @@ impl Layout {
 
     pub fn set_pos(&mut self, id: WidgetId, pos: Pos2f) {
         if let Some(node) = self.nodes.get_mut(id) {
-            node.rect.set_pos(pos)
+            node.rect.set_pos(pos);
         }
     }
 
@@ -75,24 +68,37 @@ impl Layout {
         self.keyboard.push_layer(id);
     }
 
-    pub fn hide(&mut self, tree: &Tree, id: WidgetId) {
-        if let Some(node) = tree.get(id) {
-            for &child in &node.children {
-                self.nodes.remove(child);
-            }
-            self.nodes.remove(id);
-        }
-    }
-
     pub fn clip(&mut self, tree: &Tree) {
         self.clip_stack.push(tree.current())
     }
 
+    pub fn hide(&mut self, tree: &Tree, widget: WidgetId) {
+        self.hide_many(tree, &[widget])
+    }
+
+    pub fn hide_many(&mut self, tree: &Tree, widgets: &[WidgetId]) {
+        let mut queue = VecDeque::new();
+        queue.extend(widgets);
+        while let Some(id) = queue.pop_front() {
+            self.nodes.remove(id);
+            if let Some(node) = tree.get(id) {
+                queue.extend(node.children());
+            }
+        }
+    }
+
+    pub(crate) fn resize(&mut self, rect: Rectf) {
+        self.rect = rect;
+    }
+
+    #[profiling::function]
     pub(crate) fn finish(&mut self, tree: &Tree, input: &Input) {
         self.cleanup(&tree.removed());
         self.calculate_all(tree, input);
     }
 
+    // TODO redo this
+    #[profiling::function]
     pub(crate) fn calculate(
         &mut self,
         tree: &Tree,
@@ -136,24 +142,26 @@ impl Layout {
             self.clip_stack.last().copied()
         };
 
-        self.nodes.insert(
-            id,
-            Node {
-                rect: Rectf::from_min_size(Pos2f::ZERO, size),
-                ty: node.widget.type_name(),
-                clipping,
-                interest,
-                clipped_by,
-            },
-        );
+        let value = Node {
+            rect: Rectf::from_min_size(Pos2f::ZERO, size),
+            ty: node.widget.type_name(),
+            clipping,
+            interest,
+            clipped_by,
+        };
+        self.nodes.insert(id, value);
 
         tree.exit(id);
         size
     }
 
+    #[profiling::function]
     fn calculate_all(&mut self, tree: &Tree, input: &Input) {
-        self.clear();
+        if input.last_event().filter(|c| c.is_mouse_move()).is_some() {
+            return;
+        }
 
+        self.clear();
         self.calculate(
             tree,
             input,
@@ -175,6 +183,7 @@ impl Layout {
         }
     }
 
+    #[profiling::function]
     fn resolve(&mut self, tree: &Tree) {
         let mut queue = VecDeque::new();
         queue.push_back((tree.root(), Pos2f::ZERO));
@@ -183,9 +192,10 @@ impl Layout {
             let Some(node) = self.nodes.get_mut(id) else {
                 continue;
             };
-            node.rect.set_pos(node.rect.min + pos);
-            let rect = node.rect;
 
+            node.rect.set_pos(node.rect.min + pos);
+
+            let rect = node.rect;
             let node = tree.get(id).unwrap();
             queue.extend(node.children.iter().map(|&id| (id, rect.min)));
         }

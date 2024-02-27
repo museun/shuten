@@ -2,36 +2,38 @@ use shuten::geom::vec2f;
 
 use crate::widget::prelude::*;
 
-#[derive(Debug)]
-struct Unconstrained {
+#[derive(Debug, Default)]
+pub struct Unconstrained {
     constrain_x: bool,
     constrain_y: bool,
 }
 
 impl Unconstrained {
-    const fn new() -> Self {
+    pub const fn new() -> Self {
         Self {
             constrain_x: false,
             constrain_y: false,
         }
     }
 
-    fn show(self, children: impl FnOnce()) -> Response {
+    pub const fn constrain_x(mut self, constrain_x: bool) -> Self {
+        self.constrain_x = constrain_x;
+        self
+    }
+
+    pub const fn constrain_y(mut self, constrain_y: bool) -> Self {
+        self.constrain_y = constrain_y;
+        self
+    }
+
+    pub fn show(self, children: impl FnOnce()) -> Response {
         UnconstrainedWidget::show_children(children, self)
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 struct UnconstrainedWidget {
     props: Unconstrained,
-}
-
-impl Default for UnconstrainedWidget {
-    fn default() -> Self {
-        Self {
-            props: Unconstrained::new(),
-        }
-    }
 }
 
 impl Widget for UnconstrainedWidget {
@@ -44,20 +46,20 @@ impl Widget for UnconstrainedWidget {
 
     fn layout(&self, mut ctx: LayoutCtx<'_>, input: Constraints) -> Vec2f {
         let node = ctx.tree.get_current();
-        let (min_x, max_x) = if self.props.constrain_x {
-            (0.0, input.max.x)
+        let max_x = if self.props.constrain_x {
+            input.max.x
         } else {
-            (0.0, f32::INFINITY)
+            f32::INFINITY
         };
-        let (min_y, max_y) = if self.props.constrain_y {
-            (0.0, input.max.x)
+        let max_y = if self.props.constrain_y {
+            input.max.y
         } else {
-            (0.0, f32::INFINITY)
+            f32::INFINITY
         };
 
         let constraints = Constraints {
-            min: vec2f(min_x, max_x),
-            max: vec2f(min_y, max_y),
+            min: vec2f(0.0, max_x),
+            max: vec2f(0.0, max_y),
         };
 
         let mut size = Vec2f::ZERO;

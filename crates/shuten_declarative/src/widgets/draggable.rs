@@ -7,6 +7,12 @@ pub struct DraggableResponse {
     pub dragging: Option<Dragging>,
 }
 
+impl DraggableResponse {
+    pub fn current(&self) -> Option<Pos2f> {
+        self.dragging.map(|c| c.current)
+    }
+}
+
 #[derive(Copy, Clone, Debug)]
 pub struct Dragging {
     pub origin: Pos2f,
@@ -18,7 +24,7 @@ pub struct Dragging {
 pub struct Draggable;
 
 impl Draggable {
-    fn show(self, children: impl FnOnce()) -> Response<DraggableResponse> {
+    pub fn show(self, children: impl FnOnce()) -> Response<DraggableResponse> {
         DraggableWidget::show_children(children, self)
     }
 }

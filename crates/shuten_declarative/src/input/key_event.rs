@@ -3,12 +3,12 @@ pub use crate::input::mouse::ButtonState;
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub struct KeyEvent {
     pub state: ButtonState,
-    pub kind: KeyEventKind,
+    pub kind: Key,
 }
 
 #[non_exhaustive]
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
-pub enum KeyEventKind {
+pub enum Key {
     Char(char),
     Function(u8),
     Left,
@@ -34,7 +34,7 @@ pub trait TranslateKeyEvent {
 
 impl TranslateKeyEvent for shuten::event::Key {
     fn translate(&self) -> Option<KeyEvent> {
-        use KeyEventKind as E;
+        use Key as E;
         let kind = match *self {
             Self::Char(char) => E::Char(char),
             Self::Function(func) => E::Function(func),

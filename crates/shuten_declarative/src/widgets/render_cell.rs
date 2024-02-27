@@ -6,7 +6,17 @@ use shuten::{
 use crate::widget::prelude::*;
 
 #[derive(Debug, Default)]
-struct RenderCell(Cell);
+pub struct RenderCell(Cell);
+
+impl RenderCell {
+    pub fn new(cell: impl Into<Cell>) -> Self {
+        Self(cell.into())
+    }
+
+    pub fn show(self) -> Response {
+        RenderCellWidget::show(self)
+    }
+}
 
 #[derive(Debug, Default)]
 struct RenderCellWidget {
@@ -27,12 +37,10 @@ impl Widget for RenderCellWidget {
 
     fn paint(&self, mut ctx: PaintCtx<'_, '_>) {
         let mut canvas = ctx.cropped_canvas();
-        for pos in canvas.area().indices() {
-            canvas.put(pos, self.props.0)
-        }
+        canvas.rect(canvas.area(), self.props.0);
     }
 }
 
-pub fn render_cell(cell: Cell) -> Response {
-    RenderCellWidget::show(RenderCell(cell))
+pub fn render_cell(cell: impl Into<Cell>) -> Response {
+    RenderCell::new(cell).show()
 }

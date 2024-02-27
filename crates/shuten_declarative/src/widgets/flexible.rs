@@ -59,3 +59,7 @@ pub fn flexible(flex: u16, children: impl FnOnce()) -> Response {
 pub fn expanded(children: impl FnOnce()) -> Response {
     Flexible::expanded().show(children)
 }
+
+pub fn spacer() -> Response {
+    FlexibleWidget::show(Flexible::expanded())
+}

@@ -1,10 +1,7 @@
 use std::cell::Cell;
 
+use crate::{input::Key, tree::current_tree, widget::prelude::*, widgets::*};
 use shuten::geom::{pos2f, remap, vec2f, Rectf};
-
-use crate::{input::KeyEventKind, tree::current_tree, widget::prelude::*};
-
-use super::{draggable, render_cell::render_cell};
 
 #[derive(Default, Debug)]
 pub struct Scrollable;
@@ -34,6 +31,7 @@ impl ScrollableWidget {
 
     fn scroll_down(&mut self, delta: usize) {
         self.pos += delta;
+        self.pos = self.pos.min(self.len.get());
     }
 }
 
@@ -71,18 +69,20 @@ impl Widget for ScrollableWidget {
         let mut size = Vec2f::ZERO;
 
         let offset = offset.min(children.len().saturating_sub(height));
-        for &child in &children[..offset] {
-            ctx.layout.hide(ctx.tree, child)
-        }
-
+        let mut end = offset;
         for &child in &children[offset..] {
             if size.y >= input.max.y {
                 break;
             }
             let y = size.y;
+            // FIXME: if this overflows, scroll down by the delta
             size += ctx.calculate(child, constraints);
             ctx.layout.set_pos(child, pos2f(0.0, y));
+            end += 1;
         }
+
+        ctx.layout.hide_many(ctx.tree, &children[..offset]);
+        ctx.layout.hide_many(ctx.tree, &children[end..]);
 
         let size = input.max.min(size);
 
@@ -105,12 +105,15 @@ impl Widget for ScrollableWidget {
             } => delta.y * if modifiers.is_ctrl() { 3.0 } else { 1.0 },
             Event::MouseDrag { delta, .. } => delta.y,
             Event::KeyChanged { key, .. } => match key.kind {
-                KeyEventKind::Up => -1.0,
-                KeyEventKind::Down => 1.0,
-                KeyEventKind::PageUp => -self.height.get(),
-                KeyEventKind::PageDown => self.height.get(),
-                KeyEventKind::Home => -(self.len.get() as f32),
-                KeyEventKind::End => self.len.get() as f32,
+                Key::Up => -1.0,
+                Key::Down => 1.0,
+                Key::PageUp => -self.height.get(),
+                Key::PageDown => self.height.get(),
+                Key::Home => {
+                    self.pos = 0;
+                    return Handled::Sink;
+                }
+                Key::End => self.len.get() as f32,
                 _ => return Handled::Bubble,
             },
             _ => return Handled::Bubble,
@@ -170,10 +173,9 @@ impl Widget for ScrollBarWidget {
 
         ctx.calculate(knob, Constraints::none());
 
-        let p = remap(self.props.pos, 0.0..=self.props.max, 0.0..=(size.y - 1.0))
+        let pos = remap(self.props.pos, 0.0..=self.props.max, 0.0..=(size.y - 1.0))
             .clamp(0.0, size.y - 1.0);
-        let pos = pos2f(size.x, p);
-        ctx.layout.set_pos(knob, pos);
+        ctx.layout.set_pos(knob, pos2f(size.x, pos));
 
         size
     }
