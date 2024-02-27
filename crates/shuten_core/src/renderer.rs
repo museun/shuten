@@ -9,9 +9,8 @@
 use std::io::Result;
 
 use crate::{
-    geom::{vec2, Pos2, Rect},
+    geom::Pos2,
     style::{Attribute, Rgb},
-    Canvas, Cell, Queue,
 };
 
 /// A renderer is a simple abstraction over *what* operations are done to a terminal
