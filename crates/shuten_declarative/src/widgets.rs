@@ -19,7 +19,6 @@ widgets! {
     keyboard_area
     label
     list
-    log_view
     margin
     max_size
     min_size

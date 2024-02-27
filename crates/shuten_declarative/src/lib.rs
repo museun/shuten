@@ -18,7 +18,6 @@ mod widget;
 pub use widget::{prelude, Response, Widget, WidgetExt};
 
 pub mod context;
-pub mod logger;
 
 mod term;
 pub use term::Term;
@@ -69,32 +68,3 @@ pub fn run<R>(config: Config, mut ui: impl FnMut(Term<'_>) -> R) -> std::io::Res
 
     Ok(())
 }
-
-// fn start_view_server(rx: std::sync::mpsc::Receiver<Vec<u8>>) {
-//     use std::sync::mpsc::Receiver;
-//     fn run(mut rx: Receiver<Vec<u8>>) {
-//         let server = std::net::TcpListener::bind("localhost:44334").unwrap();
-//         loop {
-//             if let Ok((client, _)) = server.accept() {
-//                 if handle(client, &mut rx).is_err() {
-//                     continue;
-//                 }
-//             }
-
-//             if rx.recv().is_err() {
-//                 break;
-//             }
-//         }
-//     }
-
-//     fn handle(mut w: impl std::io::Write, rx: &mut Receiver<Vec<u8>>) -> std::io::Result<()> {
-//         while let Ok(data) = rx.recv() {
-//             w.write_all(&data)?;
-//             w.write_all(b"\n")?;
-//             w.flush()?;
-//         }
-//         Ok(())
-//     }
-
-//     std::thread::spawn(move || run(rx));
-// }

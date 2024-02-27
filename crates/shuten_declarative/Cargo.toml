@@ -3,11 +3,8 @@ name = "shuten_declarative"
 version = "0.1.0"
 edition = "2021"
 publish = false
+
 [dependencies]
 shuten = { version = "0.1.0", path = "../shuten" }
 slotmap = "1.0.7"
-
 unicode-width = "0.1.11"
-
-log = { version = "0.4.20", features = [ "std" ] }
-time = { version = "0.3.34", features = [ "formatting", "macros" ] }
