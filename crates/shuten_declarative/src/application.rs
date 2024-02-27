@@ -7,7 +7,6 @@ use crate::{
     tree::Tree,
 };
 
-#[derive(Debug, serde::Serialize)]
 pub struct Application {
     tree: Tree,
     layout: Layout,
@@ -25,7 +24,6 @@ impl Application {
         }
     }
 
-    #[profiling::function]
     pub fn handle(&mut self, event: Event) -> bool {
         let resp = self.input.handle(&self.tree, &self.layout, &event);
         if let Event::Invalidate(rect) = event {
@@ -34,7 +32,6 @@ impl Application {
         resp == Handled::Sink
     }
 
-    #[profiling::function]
     pub fn start(&mut self) {
         self.tree.start();
         self.input.start(&self.tree, &self.layout);
@@ -42,7 +39,6 @@ impl Application {
         crate::tree::bind(&self.tree);
     }
 
-    #[profiling::function]
     pub fn finish(&mut self) {
         crate::tree::unbind();
         self.tree.finish();
@@ -50,7 +46,6 @@ impl Application {
         self.input.finish();
     }
 
-    #[profiling::function]
     pub fn paint(&mut self, canvas: Canvas<'_>) {
         self.paint.paint_all(&self.tree, &self.layout, canvas);
     }

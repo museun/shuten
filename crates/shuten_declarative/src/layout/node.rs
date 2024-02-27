@@ -1,6 +1,6 @@
 use crate::{geom::Rectf, input::Interest, tree::WidgetId};
 
-#[derive(Debug, serde::Serialize)]
+#[derive(Debug)]
 pub struct Node {
     pub(crate) rect: Rectf,
     pub(crate) interest: Interest,

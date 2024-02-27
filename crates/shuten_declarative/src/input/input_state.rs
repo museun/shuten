@@ -17,7 +17,7 @@ use super::{
     Event, Handled, MouseEvent, TranslateKeyEvent, TranslateMouseEvent,
 };
 
-#[derive(Debug, Default, serde::Serialize)]
+#[derive(Debug, Default)]
 pub struct Input {
     mouse: Mouse,
     modifiers: Modifiers,

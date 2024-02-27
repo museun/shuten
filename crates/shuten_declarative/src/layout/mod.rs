@@ -17,27 +17,14 @@ mod node;
 pub use node::Node;
 use slotmap::SecondaryMap;
 
-#[derive(serde::Serialize, Default)]
+#[derive(Default)]
 pub struct Layout {
     pub(crate) mouse: Mouse,
     pub(crate) keyboard: Keyboard,
     pub(crate) rect: Rectf,
 
-    #[serde(with = "crate::external::serialize_secondary_map")]
     nodes: SecondaryMap<WidgetId, Node>,
     clip_stack: Vec<WidgetId>,
-}
-
-impl std::fmt::Debug for Layout {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("Layout")
-            .field("mouse", &self.mouse)
-            .field("keyboard", &self.keyboard)
-            .field("nodes", &crate::external::SecondaryMapPrinter(&self.nodes))
-            .field("clip_stack", &self.clip_stack)
-            .field("rect", &self.rect)
-            .finish()
-    }
 }
 
 impl Layout {
@@ -91,14 +78,13 @@ impl Layout {
         self.rect = rect;
     }
 
-    #[profiling::function]
     pub(crate) fn finish(&mut self, tree: &Tree, input: &Input) {
         self.cleanup(&tree.removed());
         self.calculate_all(tree, input);
     }
 
     // TODO redo this
-    #[profiling::function]
+
     pub(crate) fn calculate(
         &mut self,
         tree: &Tree,
@@ -155,7 +141,6 @@ impl Layout {
         size
     }
 
-    #[profiling::function]
     fn calculate_all(&mut self, tree: &Tree, input: &Input) {
         if input.last_event().filter(|c| c.is_mouse_move()).is_some() {
             return;
@@ -183,7 +168,6 @@ impl Layout {
         }
     }
 
-    #[profiling::function]
     fn resolve(&mut self, tree: &Tree) {
         let mut queue = VecDeque::new();
         queue.push_back((tree.root(), Pos2f::ZERO));

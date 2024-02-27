@@ -3,13 +3,13 @@ use std::collections::HashMap;
 use crate::tree::WidgetId;
 use shuten::{event::MouseButton, geom::Pos2f};
 
-#[derive(Debug, Default, serde::Serialize)]
+#[derive(Debug, Default)]
 pub struct Mouse {
     pub pos: Pos2f,
     pub buttons: HashMap<MouseButton, ButtonState>,
 }
 
-#[derive(Copy, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash, serde::Serialize)]
+#[derive(Copy, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub enum ButtonState {
     Down, // just pressed
     Held, // been pressed for some frames
@@ -32,7 +32,7 @@ impl ButtonState {
     }
 }
 
-#[derive(Debug, Default, serde::Serialize)]
+#[derive(Debug, Default)]
 pub struct Intersections {
     pub hit: Vec<WidgetId>,
     pub entered: Vec<WidgetId>,

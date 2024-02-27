@@ -1,8 +1,6 @@
 use crate::{tree::WidgetId, widget::ErasedWidget, Widget};
 
-#[derive(serde::Serialize)]
 pub struct Node {
-    #[serde(with = "crate::external::erased_widget")]
     pub(crate) widget: Box<dyn ErasedWidget>,
     pub(crate) parent: Option<WidgetId>,
     pub(crate) children: Vec<WidgetId>,

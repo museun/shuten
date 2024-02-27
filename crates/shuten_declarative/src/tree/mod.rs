@@ -23,36 +23,6 @@ pub struct Tree {
     inner: Rc<TreeInner>,
 }
 
-impl serde::Serialize for Tree {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        use crate::external::serialize_slot_map::SlotMap;
-        use serde::ser::SerializeStruct;
-        let mut ser = serializer.serialize_struct("Tree", 4)?;
-        ser.serialize_field("nodes", &SlotMap(&*self.inner.nodes.borrow()))?;
-        ser.serialize_field("stack", &*self.inner.stack.borrow())?;
-        ser.serialize_field("removed", &*self.inner.removed.borrow())?;
-        ser.serialize_field("root", &self.inner.root)?;
-        ser.end()
-    }
-}
-
-impl std::fmt::Debug for Tree {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("Tree")
-            .field(
-                "nodes",
-                &crate::external::SlotMapPrinter(&*self.inner.nodes.borrow()),
-            )
-            .field("stack", &self.inner.stack)
-            .field("removed", &self.inner.removed)
-            .field("root", &self.inner.root)
-            .finish()
-    }
-}
-
 impl Tree {
     pub(crate) fn new() -> Self {
         Self {
@@ -95,7 +65,6 @@ impl Tree {
         RefMut::filter_map(nodes, |nodes| nodes.get_mut(id)).ok()
     }
 
-    #[profiling::function]
     pub fn widget<T: Widget>(&self, props: T::Props<'_>) -> Response<T::Response> {
         let resp = self.begin_widget::<T>(props);
         self.end_widget(resp.id());
@@ -103,7 +72,6 @@ impl Tree {
     }
 }
 
-#[profiling::all_functions]
 impl Tree {
     pub(crate) fn start(&self) {
         let mut nodes = self.inner.nodes.borrow_mut();
@@ -175,7 +143,6 @@ impl Tree {
     }
 }
 
-#[profiling::all_functions]
 impl Tree {
     fn next_existing_widget(
         nodes: &mut SlotMap<WidgetId, Node>,

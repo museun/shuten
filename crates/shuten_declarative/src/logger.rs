@@ -1,16 +1,10 @@
-use std::{
-    io::Write as _,
-    net::TcpListener,
-    sync::{Arc, Mutex, OnceLock},
-};
-
-use shuten::{style::Rgb, Queue};
+use std::sync::{Arc, Mutex, OnceLock};
 
 use crate::widgets::{expanded, label, Label, List};
+use shuten::{style::Rgb, Queue};
 
 const MAX_LOG_ITEMS: usize = 200;
 type LogQueue = Queue<LogItem, MAX_LOG_ITEMS>;
-
 static LOGGER: OnceLock<Logger> = OnceLock::new();
 
 #[derive(Debug, Clone)]
@@ -64,55 +58,13 @@ impl LogItem {
 
 pub struct Logger {
     queue: Mutex<LogQueue>,
-    log_to_stderr: bool,
-    tx: std::sync::mpsc::Sender<LogItem>,
 }
 
 impl Logger {
-    pub fn init(log_to_stderr: bool) {
-        let (tx, rx) = std::sync::mpsc::channel::<LogItem>();
-
+    pub fn init() {
         let logger = LOGGER.get_or_init(|| Self {
             queue: Mutex::default(),
-            log_to_stderr,
-            tx,
-        });
-
-        std::thread::spawn(move || {
-            let mut queue = <Queue<LogItem, 100>>::new();
-            let listener = TcpListener::bind("127.0.0.1:52132").unwrap();
-
-            for mut incoming in listener.incoming().flatten() {
-                'inner: loop {
-                    let Ok(msg) = rx.recv() else { return };
-                    queue.push(msg);
-
-                    for msg in queue.drain(..) {
-                        let level = match msg.level {
-                            log::Level::Error => "error",
-                            log::Level::Warn => "warn",
-                            log::Level::Info => "info",
-                            log::Level::Debug => "debug",
-                            log::Level::Trace => "trace",
-                        };
-
-                        let json = serde_json::json! ({
-                            "level": level,
-                            "target": msg.target,
-                            "data": msg.data,
-                        });
-
-                        if incoming
-                            .write_all(&serde_json::to_vec(&json).unwrap())
-                            .and_then(|_| incoming.write_all(b"\n"))
-                            .and_then(|_| incoming.flush())
-                            .is_err()
-                        {
-                            break 'inner;
-                        }
-                    }
-                }
-            }
+            // tx,
         });
 
         log::set_logger(logger as _).expect("single initialization");
@@ -155,19 +107,47 @@ impl log::Log for Logger {
             data: Arc::from(record.args().to_string()),
         };
 
-        if self.log_to_stderr {
-            eprintln!(
-                "[{level}] {target}: {data}",
-                target = record.target(),
-                level = record.level(),
-                data = record.args()
-            );
-        }
-
-        let _ = self.tx.send(item.clone());
-
         self.queue.lock().unwrap().push(item);
     }
 
     fn flush(&self) {}
 }
+
+// fn start_remote_log(rx: std::sync::mpsc::Receiver<LogItem>) {
+//     std::thread::spawn(move || {
+//         let mut queue = <Queue<LogItem, 100>>::new();
+//         let listener = TcpListener::bind("127.0.0.1:52132").unwrap();
+
+//         for mut incoming in listener.incoming().flatten() {
+//             'inner: loop {
+//                 let Ok(msg) = rx.recv() else { return };
+//                 queue.push(msg);
+
+//                 for msg in queue.drain(..) {
+//                     let level = match msg.level {
+//                         log::Level::Error => "error",
+//                         log::Level::Warn => "warn",
+//                         log::Level::Info => "info",
+//                         log::Level::Debug => "debug",
+//                         log::Level::Trace => "trace",
+//                     };
+
+//                     let json = serde_json::json! ({
+//                         "level": level,
+//                         "target": msg.target,
+//                         "data": msg.data,
+//                     });
+
+//                     if incoming
+//                         .write_all(&serde_json::to_vec(&json).unwrap())
+//                         .and_then(|_| incoming.write_all(b"\n"))
+//                         .and_then(|_| incoming.flush())
+//                         .is_err()
+//                     {
+//                         break 'inner;
+//                     }
+//                 }
+//             }
+//         }
+//     });
+// }

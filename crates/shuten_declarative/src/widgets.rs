@@ -1,7 +1,3 @@
-use crate::Response;
-
-use self::grid::Grid;
-
 macro_rules! widgets {
     ($($ident:ident)*) => {
         $(

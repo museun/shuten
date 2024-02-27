@@ -12,15 +12,13 @@ use crate::{
     tree::{Tree, WidgetId},
 };
 
-#[derive(Debug, serde::Serialize)]
+#[derive(Debug)]
 pub struct Paint {
     clip_stack: Vec<Rectf>,
     pub(crate) debug_layer: Vec<Cow<'static, str>>,
 }
 
-#[profiling::all_functions]
 impl Paint {
-    #[profiling::skip]
     pub(crate) const fn new() -> Self {
         Self {
             clip_stack: Vec::new(),

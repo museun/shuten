@@ -1,6 +1,6 @@
 use crate::tree::WidgetId;
 
-#[derive(Debug, serde::Serialize)]
+#[derive(Debug)]
 pub struct Layered<T = ()> {
     layers: Vec<Vec<(WidgetId, T)>>,
     stack: Vec<(WidgetId, usize)>,
