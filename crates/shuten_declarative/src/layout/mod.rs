@@ -130,7 +130,6 @@ impl Layout {
 
         let value = Node {
             rect: Rectf::from_min_size(Pos2f::ZERO, size),
-            ty: node.widget.type_name(),
             clipping,
             interest,
             clipped_by,

@@ -7,14 +7,15 @@ use std::{
 
 use slotmap::SlotMap;
 
+slotmap::new_key_type! {
+    pub struct WidgetId;
+}
+
 use crate::widget::{DummyWidget, ErasedWidget, Response, RootWidget, Widget};
 
 mod context;
 pub use context::current_tree;
 pub(crate) use context::{bind, unbind};
-
-mod widget_id;
-pub use widget_id::WidgetId;
 
 mod node;
 pub use node::Node;

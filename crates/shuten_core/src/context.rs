@@ -210,9 +210,8 @@ impl CursorState {
 #[cfg(test)]
 mod tests {
     use crate::{
-        geom::{pos2, rect, vec2},
+        geom::rect,
         style::{Attribute, Rgb},
-        Cell,
     };
 
     use super::*;

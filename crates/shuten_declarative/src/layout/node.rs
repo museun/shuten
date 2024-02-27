@@ -6,5 +6,4 @@ pub struct Node {
     pub(crate) interest: Interest,
     pub(crate) clipping: bool,
     pub(crate) clipped_by: Option<WidgetId>,
-    pub(crate) ty: &'static str,
 }

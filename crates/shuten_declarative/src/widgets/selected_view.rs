@@ -1,6 +1,6 @@
 use std::borrow::Cow;
 
-use shuten::geom::{MainAxisAlignment, Pos2f};
+use shuten::geom::MainAxisAlignment;
 
 use crate::widget::prelude::*;
 
