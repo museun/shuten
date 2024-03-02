@@ -7,7 +7,7 @@ use shuten::{
 use slotmap::{SecondaryMap, SlotMap};
 use std::{
     any::TypeId,
-    cell::{Cell, Ref, RefCell, RefMut},
+    cell::{Ref, RefCell, RefMut},
     collections::VecDeque,
     ops::RangeInclusive,
 };
@@ -150,7 +150,7 @@ impl Ui {
             let Some(widget) = widget.as_any_mut().downcast_mut::<W>() else {
                 unreachable!("expected to get: {}", widget.type_name())
             };
-            widget.update(self, props)
+            widget.update(props)
         };
 
         self.nodes.borrow_mut()[id].widget = widget;
@@ -380,12 +380,12 @@ impl Ui {
     }
 
     pub fn rect(&self, bg: impl Into<Rgb>, min_size: Vec2f) -> Response {
-        FilledWidget::show_children(self, Filled::bg(bg).min_size(min_size), |ui| {})
+        FilledWidget::show_children(self, Filled::bg(bg).min_size(min_size), |_ui| {})
     }
 
-    pub fn progress<T>(&self) -> () {}
+    // pub fn progress<T>(&self) {}
 
-    pub fn slider<T>(&self, value: &mut T, range: RangeInclusive<T>) -> Response<()>
+    pub fn slider<T>(&self, _value: &mut T, _range: RangeInclusive<T>) -> Response<()>
     where
         T: PartialEq<T> + Num,
     {
@@ -559,48 +559,10 @@ impl<'a: 'c, 'c> PaintCtx<'a, 'c> {
     }
 }
 
-// mod local {
-//     use std::cell::RefCell;
-
-//     use crate::Ui;
-//     thread_local! {static CONTEXT: RefCell<Option<Ui>> = const { RefCell::new(None) } }
-
-//     pub fn bind(ui: &Ui) {
-//         CONTEXT.with(move |current| {
-//             let mut current = current.borrow_mut();
-//             assert!(
-//                 current.is_none(),
-//                 "cannot bind a ui with it already being bound"
-//             );
-//             *current = Some(ui.clone());
-//         })
-//     }
-
-//     pub fn unbind() {
-//         CONTEXT.with(|current| {
-//             let mut current = current.borrow_mut();
-//             assert!(
-//                 current.take().is_some(),
-//                 "cannot unbind ui without it being bound"
-//             )
-//         })
-//     }
-
-//     pub fn current() -> Ui {
-//         CONTEXT.with(|current| {
-//             current
-//                 .borrow()
-//                 .as_ref()
-//                 .expect("cannot get ui without one being bound")
-//                 .clone()
-//         })
-//     }
-// }
-
 #[cfg(test)]
 mod tests {
     use crate::widgets::*;
-    use shuten::{geom::*, style::*};
+    use shuten::geom::*;
 
     use super::*;
     #[test]

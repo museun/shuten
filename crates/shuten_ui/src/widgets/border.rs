@@ -1,13 +1,13 @@
 use shuten::{
-    geom::{pos2, Constraints, Margin, Vec2f},
+    geom::{pos2, Constraints, Vec2f},
     style::Color,
     Cell,
 };
 
 use crate::{
     ui::{LayoutCtx, PaintCtx},
-    widgets::MarginWidget,
-    NoResponse, Ui, Widget,
+    widgets::margin::margin,
+    NoResponse, Widget,
 };
 
 #[derive(Debug)]
@@ -180,15 +180,11 @@ impl Widget for BorderWidget {
     type Response = NoResponse;
     type Props<'a> = BorderStyle;
 
-    fn update(&mut self, _: &Ui, props: Self::Props<'_>) -> Self::Response {
+    fn update(&mut self, props: Self::Props<'_>) -> Self::Response {
         self.props = props;
     }
 
     fn layout(&self, ctx: LayoutCtx, input: Constraints) -> Vec2f {
-        // let mut margin = MarginWidget::default();
-        // margin.update(Margin::same(1));
-        // margin.layout(ctx, input)
-
         todo!()
     }
 

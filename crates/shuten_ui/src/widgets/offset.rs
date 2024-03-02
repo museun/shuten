@@ -1,6 +1,6 @@
 use shuten::geom::{Constraints, Pos2f, Vec2f};
 
-use crate::{ui::LayoutCtx, NoResponse, Ui, Widget};
+use crate::{ui::LayoutCtx, NoResponse, Widget};
 
 #[derive(Debug, Default)]
 pub struct OffsetWidget {
@@ -11,7 +11,7 @@ impl Widget for OffsetWidget {
     type Response = NoResponse;
     type Props<'a> = Pos2f;
 
-    fn update(&mut self, _: &Ui, props: Self::Props<'_>) -> Self::Response {
+    fn update(&mut self, props: Self::Props<'_>) -> Self::Response {
         self.props = props;
     }
 

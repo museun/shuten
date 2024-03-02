@@ -1,6 +1,6 @@
 use shuten::geom::{vec2f, Constraints, Vec2f};
 
-use crate::{ui::LayoutCtx, NoResponse, Ui, Widget};
+use crate::{ui::LayoutCtx, NoResponse, Widget};
 
 #[derive(Debug)]
 pub struct Sized {
@@ -55,7 +55,7 @@ impl Widget for SizedWidget {
     type Response = NoResponse;
     type Props<'a> = Sized;
 
-    fn update(&mut self, _: &Ui, props: Self::Props<'_>) -> Self::Response {
+    fn update(&mut self, props: Self::Props<'_>) -> Self::Response {
         self.props = props;
     }
 

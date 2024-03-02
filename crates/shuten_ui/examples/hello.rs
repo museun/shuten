@@ -21,6 +21,7 @@ pub fn main() -> std::io::Result<()> {
     })
 }
 
+#[allow(dead_code)]
 fn next_color(n: f32) -> Rgb {
     let h = n * ((1.0 + 5.0_f32.sqrt()) / 2.0);
     let h = (h + 0.5) * -1.0;

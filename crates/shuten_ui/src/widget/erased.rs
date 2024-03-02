@@ -5,7 +5,7 @@ use super::{
     Interest, LayoutCtx, PaintCtx, Widget,
 };
 
-pub(crate) trait ErasedWidget: std::any::Any + std::fmt::Debug {
+pub trait ErasedWidget: std::any::Any + std::fmt::Debug {
     fn flex(&self) -> (u16, FlexFit);
     fn flow(&self) -> Flow;
 

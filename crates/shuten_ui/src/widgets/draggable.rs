@@ -2,7 +2,7 @@ use shuten::geom::{Pos2f, Vec2f};
 
 use crate::{
     input::{Handled, MouseDrag},
-    Interest, Ui, Widget,
+    Interest, Widget,
 };
 
 #[derive(Copy, Clone, Debug, PartialEq)]
@@ -35,7 +35,7 @@ impl Widget for DraggableWidget {
     type Response = DraggableResponse;
     type Props<'a> = Draggable;
 
-    fn update(&mut self, _: &Ui, _: Self::Props<'_>) -> Self::Response {
+    fn update(&mut self, _: Self::Props<'_>) -> Self::Response {
         DraggableResponse {
             dragging: self.state,
         }

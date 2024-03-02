@@ -1,7 +1,7 @@
 use std::ops::RangeInclusive;
 
 use shuten::{
-    geom::{lerp, remap, vec2f, Constraints, Rectf, Vec2f},
+    geom::{remap, vec2f, Constraints, Rectf, Vec2f},
     style::{Color, Rgb},
     Cell,
 };
@@ -9,7 +9,7 @@ use shuten::{
 use crate::{
     input::{Handled, MouseClick, MouseDrag, MouseMove},
     ui::{LayoutCtx, PaintCtx},
-    Interest, Ui, Widget,
+    Interest, Widget,
 };
 
 use super::{Dragging, Orientation};
@@ -111,7 +111,7 @@ impl Widget for SliderWidget {
     type Response = SliderResponse;
     type Props<'a> = Slider;
 
-    fn update(&mut self, ui: &Ui, props: Self::Props<'_>) -> Self::Response {
+    fn update(&mut self, props: Self::Props<'_>) -> Self::Response {
         SliderResponse {
             value: std::mem::replace(&mut self.props, props).pos,
         }
@@ -122,12 +122,16 @@ impl Widget for SliderWidget {
     }
 
     fn on_mouse_enter(&mut self, event: MouseMove) -> Handled {
+        let _ = event;
         Handled::Sink
     }
 
-    fn on_mouse_leave(&mut self, event: MouseMove) {}
+    fn on_mouse_leave(&mut self, event: MouseMove) {
+        let _ = event;
+    }
 
     fn on_mouse_click(&mut self, event: MouseClick) -> Handled {
+        let _ = event;
         Handled::Sink
     }
 
@@ -150,6 +154,7 @@ impl Widget for SliderWidget {
     }
 
     fn layout(&self, ctx: LayoutCtx, input: Constraints) -> Vec2f {
+        let _ = ctx;
         input.constrain_min(self.props.min_size)
     }
 

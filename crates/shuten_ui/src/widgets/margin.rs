@@ -1,6 +1,6 @@
 use shuten::geom::{Constraints, Margin, Vec2f};
 
-use crate::{ui::LayoutCtx, NoResponse, Ui, Widget};
+use crate::{ui::LayoutCtx, NoResponse, Response, Ui, Widget, WidgetExt};
 
 #[derive(Debug, Default)]
 pub struct MarginWidget {
@@ -11,7 +11,7 @@ impl Widget for MarginWidget {
     type Response = NoResponse;
     type Props<'a> = Margin;
 
-    fn update(&mut self, _: &Ui, props: Self::Props<'_>) -> Self::Response {
+    fn update(&mut self, props: Self::Props<'_>) -> Self::Response {
         self.props = props;
     }
 
@@ -29,4 +29,8 @@ impl Widget for MarginWidget {
         }
         constraints.constrain_min(size.max(margin))
     }
+}
+
+pub fn margin<R>(margin: Margin, show: impl FnOnce(&Ui) -> R) -> impl FnOnce(&Ui) -> Response {
+    move |ui| MarginWidget::show_children(ui, margin, show)
 }

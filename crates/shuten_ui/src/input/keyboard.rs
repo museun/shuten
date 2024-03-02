@@ -22,7 +22,7 @@ impl Keyboard {
         stack: &mut Vec<WidgetId>,
     ) -> Handled {
         let mut resp = Handled::Bubble;
-        for (id, _) in self.layered.iter() {
+        for (id, ()) in self.layered.iter() {
             let Some(node) = nodes.get_mut(id) else {
                 continue;
             };

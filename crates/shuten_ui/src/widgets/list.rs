@@ -2,7 +2,7 @@ use shuten::geom::{
     vec2f, Constraints, CrossAxisAlignment, FlexFit, Flow, MainAxisAlignment, MainAxisSize, Vec2f,
 };
 
-use crate::{ui::LayoutCtx, NoResponse, Ui, Widget};
+use crate::{ui::LayoutCtx, NoResponse, Widget};
 
 #[derive(Copy, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub enum Direction {
@@ -97,7 +97,7 @@ impl Widget for ListWidget {
     type Response = NoResponse;
     type Props<'a> = List;
 
-    fn update(&mut self, _: &Ui, props: Self::Props<'_>) -> Self::Response {
+    fn update(&mut self, props: Self::Props<'_>) -> Self::Response {
         self.props = props;
     }
 

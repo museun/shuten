@@ -1,7 +1,7 @@
 use shuten::geom::{vec2f, Align2, Constraints, Vec2f};
 
 use crate::ui::LayoutCtx;
-use crate::{NoResponse, Ui, Widget};
+use crate::{NoResponse, Widget};
 
 #[derive(Debug, Default)]
 pub struct AlignWidget {
@@ -12,7 +12,7 @@ impl Widget for AlignWidget {
     type Response = NoResponse;
     type Props<'a> = Align2;
 
-    fn update(&mut self, _: &Ui, props: Self::Props<'_>) -> Self::Response {
+    fn update(&mut self, props: Self::Props<'_>) -> Self::Response {
         self.align = props;
     }
 

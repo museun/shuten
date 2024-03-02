@@ -9,7 +9,7 @@ use shuten::{
 use crate::{
     ext::DigitExt,
     ui::{LayoutCtx, PaintCtx},
-    NoResponse, Ui, Widget,
+    NoResponse, Widget,
 };
 
 // TODO support multi-line strings (Align2 and count '\n')
@@ -191,7 +191,7 @@ impl<T: Label + 'static> Widget for LabelWidget<T> {
     type Response = NoResponse;
     type Props<'a> = Styled<T>;
 
-    fn update(&mut self, _: &Ui, props: Self::Props<'_>) -> Self::Response {
+    fn update(&mut self, props: Self::Props<'_>) -> Self::Response {
         self.data = props;
     }
 

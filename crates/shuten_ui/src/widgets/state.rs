@@ -5,7 +5,7 @@ use std::{
 
 use shuten::geom::{Constraints, Vec2f};
 
-use crate::{ui::LayoutCtx, Ui, Widget};
+use crate::{ui::LayoutCtx, Widget};
 
 pub trait Stateful: 'static + std::fmt::Debug {}
 impl<T: 'static + std::fmt::Debug> Stateful for T {}
@@ -98,7 +98,7 @@ impl<T: Stateful> Widget for StateWidget<T> {
     type Response = StateResponse<T>;
     type Props<'a> = State<T>;
 
-    fn update(&mut self, _: &Ui, props: Self::Props<'_>) -> Self::Response {
+    fn update(&mut self, props: Self::Props<'_>) -> Self::Response {
         let value = self
             .props
             .get_or_insert_with(|| {

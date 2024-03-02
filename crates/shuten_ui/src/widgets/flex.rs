@@ -1,6 +1,6 @@
 use shuten::geom::FlexFit;
 
-use crate::{NoResponse, Ui, Widget};
+use crate::{NoResponse, Widget};
 
 #[derive(Debug, Default)]
 pub struct Flex {
@@ -33,7 +33,7 @@ impl Widget for FlexWidget {
     type Response = NoResponse;
     type Props<'a> = Flex;
 
-    fn update(&mut self, _: &Ui, props: Self::Props<'_>) -> Self::Response {
+    fn update(&mut self, props: Self::Props<'_>) -> Self::Response {
         self.props = props;
     }
 

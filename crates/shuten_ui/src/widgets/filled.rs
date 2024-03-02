@@ -6,7 +6,7 @@ use shuten::{
 
 use crate::{
     ui::{LayoutCtx, PaintCtx},
-    NoResponse, Ui, Widget,
+    NoResponse, Widget,
 };
 
 #[derive(Default, Debug)]
@@ -38,7 +38,7 @@ impl Widget for FilledWidget {
     type Response = NoResponse;
     type Props<'a> = Filled;
 
-    fn update(&mut self, _: &Ui, props: Self::Props<'_>) -> Self::Response {
+    fn update(&mut self, props: Self::Props<'_>) -> Self::Response {
         self.props = props;
     }
 

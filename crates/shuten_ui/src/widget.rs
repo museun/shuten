@@ -3,7 +3,7 @@ use shuten::geom::{Constraints, FlexFit, Flow, Vec2f};
 use crate::{
     input::{Handled, KeyPressed, MouseClick, MouseDrag, MouseHeld, MouseMove, MouseScroll},
     ui::{LayoutCtx, PaintCtx},
-    Interest, Ui,
+    Interest,
 };
 
 mod erased;
@@ -21,7 +21,7 @@ pub trait Widget: Default + std::fmt::Debug + 'static {
     type Response;
     type Props<'a>: Props;
 
-    fn update(&mut self, ui: &Ui, props: Self::Props<'_>) -> Self::Response;
+    fn update(&mut self, props: Self::Props<'_>) -> Self::Response;
 
     fn flex(&self) -> (u16, FlexFit) {
         (0, FlexFit::Loose)
