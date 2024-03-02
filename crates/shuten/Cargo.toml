@@ -10,5 +10,6 @@ crossterm = { version = "0.27.0", features = [ "windows", "events" ] }
 serde = { version = "1.0.197", features = [ "derive" ], optional = true }
 
 [features]
+default = [  ]
 serde = [ "dep:serde", "shuten_core/serde" ]
 profiling = [ "shuten_core/profiling" ]

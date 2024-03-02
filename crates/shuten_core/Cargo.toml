@@ -10,5 +10,6 @@ profiling = { version = "1.0.15", optional = true }
 serde = { version = "1.0.197", features = [ "derive" ], optional = true }
 
 [features]
+default = [  ]
 serde = [ "dep:serde" ]
 profiling = [ "dep:profiling" ]

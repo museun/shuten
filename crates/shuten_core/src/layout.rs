@@ -90,42 +90,49 @@ impl Linear {
         let mut layout = self.layout(rect);
         input
             .into_iter()
-            .filter_map(move |size| layout.layout(size))
+            .filter_map(move |size| layout.allocate(size))
     }
 }
 
 /// An incremental layout calculator
 ///
 /// This is create with [`Linear::layout`]
+#[derive(Copy, Clone)]
 pub struct LinearLayout {
     linear: Linear,
     cursor: Pos2,
     rect: Rect,
-    max: u16,
+    max: u16, // this is a bad name
 }
 
 impl LinearLayout {
     /// Layout this size, returning a `Rect` if possible
-    pub fn layout(&mut self, size: Vec2) -> Option<Rect> {
+    // TODO make it easier to add a flex spacer
+    pub fn allocate(&mut self, size: Vec2) -> Option<Rect> {
         match self.linear.axis {
             Axis::Horizontal => self.horizontal(size),
             Axis::Vertical => self.vertical(size),
         }
     }
 
+    pub const fn with_spacing(mut self, spacing: Vec2) -> Self {
+        self.linear = self.linear.spacing(spacing);
+        self
+    }
+
     fn horizontal(&mut self, size: Vec2) -> Option<Rect> {
         self.max = self.max.max(size.y);
-        if self.cursor.x + size.x >= self.rect.right() {
+        if self.cursor.x + size.x > self.rect.right() {
             if self.linear.clip && !self.linear.wrap {
                 return None;
             }
             if self.linear.wrap {
-                self.cursor.y += self.linear.spacing.y + self.max;
+                self.cursor.y += self.linear.spacing.y + size.y;
                 self.max += size.y;
                 self.cursor.x = self.rect.left();
             }
         }
-        if self.cursor.y + size.y * self.linear.clip as u16 >= self.rect.bottom() {
+        if self.cursor.y + (size.y * self.linear.wrap as u16) > self.rect.bottom() {
             return None;
         }
         let rect = Rect::from_min_size(self.cursor, size);
@@ -143,11 +150,34 @@ impl LinearLayout {
                 self.cursor.y = self.rect.top();
             }
         }
-        if self.cursor.x + size.x * self.linear.clip as u16 >= self.rect.right() {
+        if self.cursor.x + size.x * self.linear.clip as u16 > self.rect.right() {
             return None;
         }
         let rect = Rect::from_min_size(self.cursor, size);
         self.cursor.y += size.y + self.linear.spacing.y;
         Some(rect)
+    }
+
+    pub fn remaining_on_axis(&self) -> u16 {
+        match self.linear.axis {
+            Axis::Horizontal => self.rect.right().saturating_sub(self.cursor.x),
+            Axis::Vertical => self.rect.bottom().saturating_sub(self.cursor.y),
+        }
+    }
+
+    pub const fn spacing(&self) -> Vec2 {
+        self.linear.spacing
+    }
+
+    pub const fn start(&self) -> Pos2 {
+        self.rect.left_top()
+    }
+
+    pub fn max_size(&self) -> Vec2 {
+        self.rect.size()
+    }
+
+    pub const fn cursor(&self) -> Pos2 {
+        self.cursor
     }
 }

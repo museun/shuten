@@ -35,7 +35,7 @@ impl Cell {
     pub const fn new(char: char) -> Self {
         Self {
             char,
-            fg: Color::Reuse,
+            fg: Color::Reset,
             bg: Color::Reuse,
             attr: CellAttr::Reset,
         }

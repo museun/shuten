@@ -21,11 +21,22 @@ pub enum Flow {
     },
 }
 
+impl Flow {
+    pub const fn is_relative(&self) -> bool {
+        !self.is_inline()
+    }
+
+    pub const fn is_inline(&self) -> bool {
+        matches!(self, Self::Inline)
+    }
+}
+
 /// How flex items should be fitted
-#[derive(Copy, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(Copy, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash, Default)]
 #[cfg_attr(feature = "serde", derive(::serde::Serialize, ::serde::Deserialize))]
 pub enum FlexFit {
     /// The container lets the child have any size that fits within the container
+    #[default]
     Loose,
     /// The container forces its children to stretch to its size
     Tight,
@@ -121,6 +132,9 @@ pub enum CrossAxisAlignment {
 impl CrossAxisAlignment {
     /// What is the flex factor for the cross axis?
     pub const fn flex(&self) -> u16 {
-        matches!(self, Self::Stretch) as u16
+        match self {
+            Self::Start | Self::Center | Self::End => 0,
+            Self::Stretch => 1,
+        }
     }
 }

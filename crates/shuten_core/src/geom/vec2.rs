@@ -136,3 +136,9 @@ impl std::ops::MulAssign for Vec2 {
         *self = *self * rhs
     }
 }
+
+impl From<(u16, u16)> for Vec2 {
+    fn from((x, y): (u16, u16)) -> Self {
+        vec2(x, y)
+    }
+}

@@ -47,6 +47,11 @@ impl Event {
         matches!(self, Self::Invalidate(..))
     }
 
+    /// Was this [`Event`] a [`Event::Blend`] event?
+    pub const fn is_blend(&self) -> bool {
+        matches!(self, Self::Blend(..))
+    }
+
     /// Was this [`Event`] a [`MouseEvent::Move`]?
     pub const fn is_mouse_move(&self) -> bool {
         matches!(self, Self::Mouse(MouseEvent::Move { .. }, ..))

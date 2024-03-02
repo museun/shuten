@@ -81,6 +81,22 @@ impl Rectf {
         )
     }
 
+    pub const fn left_top(&self) -> Pos2f {
+        pos2f(self.left(), self.top())
+    }
+
+    pub const fn right_top(&self) -> Pos2f {
+        pos2f(self.right(), self.top())
+    }
+
+    pub const fn left_bottom(&self) -> Pos2f {
+        pos2f(self.left(), self.bottom())
+    }
+
+    pub const fn right_bottom(&self) -> Pos2f {
+        pos2f(self.right(), self.bottom())
+    }
+
     pub fn size(&self) -> Vec2f {
         (self.max - self.min).to_vec2()
     }
@@ -91,6 +107,14 @@ impl Rectf {
 
     pub fn set_pos(&mut self, pos: Pos2f) {
         *self = Self::from_min_size(pos, self.size())
+    }
+
+    pub fn with_size(self, size: Vec2f) -> Self {
+        Self::from_min_size(self.min, size)
+    }
+
+    pub fn with_pos(self, min: Pos2f) -> Self {
+        Self::from_min_max(min, self.max)
     }
 
     pub fn constrain(self, other: Self) -> Self {

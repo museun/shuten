@@ -179,9 +179,9 @@ impl<const N: usize> FrameStats<N> {
         let mut data = String::new();
         for (label, stats) in out {
             use std::fmt::Write as _;
-            let _ = write!(
+            let _ = writeln!(
                 &mut data,
-                "{: <left$} | {: <min$} | {: <max$} | {: <avg$}\n",
+                "{: <left$} | {: <min$} | {: <max$} | {: <avg$}",
                 label,
                 stats.minimum,
                 stats.maximum,

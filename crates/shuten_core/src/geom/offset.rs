@@ -1,3 +1,5 @@
+use super::{Pos2, Vec2};
+
 /// An offset is a signed position/vector
 ///
 /// This allows to, say, translate by a negative value
@@ -51,5 +53,24 @@ impl std::ops::Sub for Offset {
     type Output = Self;
     fn sub(self, rhs: Self) -> Self::Output {
         offset(self.x - rhs.x, self.y - rhs.y)
+    }
+}
+
+impl From<Vec2> for Offset {
+    fn from(value: Vec2) -> Self {
+        offset(value.x as _, value.y as _)
+    }
+}
+
+impl From<Pos2> for Offset {
+    fn from(value: Pos2) -> Self {
+        offset(value.x as _, value.y as _)
+    }
+}
+
+impl std::ops::Neg for Offset {
+    type Output = Self;
+    fn neg(self) -> Self::Output {
+        offset(-self.x, -self.y)
     }
 }

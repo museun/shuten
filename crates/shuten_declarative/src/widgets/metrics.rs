@@ -65,7 +65,7 @@ impl Widget for MetricsWidget {
         let mut data = String::new();
         for (label, stats) in &self.props.stats {
             use std::fmt::Write as _;
-            let _ = write!(
+            let _ = writeln!(
                 &mut data,
                 "{: <left$} | {: <min$} | {: <max$} | {: <avg$}\n",
                 label,

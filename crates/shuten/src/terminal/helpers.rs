@@ -1,7 +1,5 @@
 //! Terminal helpers
 
-use std::io::Write as _;
-
 use shuten_core::geom::{rect, vec2, Rect};
 
 use crate::{Config, ShareableConfig};
@@ -25,17 +23,16 @@ pub fn setup(config: Config) -> std::io::Result<(Rect, std::io::Stdout, Guard, S
 
     let mut out = std::io::stdout();
     if config.use_alt_screen {
-        crossterm::queue!(&mut out, EnterAlternateScreen)?;
+        crossterm::execute!(&mut out, EnterAlternateScreen)?;
+        crossterm::execute!(&mut out, DisableLineWrap)?;
     }
-    crossterm::queue!(&mut out, DisableLineWrap)?;
 
     if config.hide_cursor {
-        crossterm::queue!(&mut out, cursor::Hide)?;
+        crossterm::execute!(&mut out, cursor::Hide)?;
     }
     if config.mouse_capture {
-        crossterm::queue!(&mut out, event::EnableMouseCapture)?;
+        crossterm::execute!(&mut out, event::EnableMouseCapture)?;
     }
-    out.flush()?;
 
     let config = ShareableConfig::from(config);
     let size = crossterm::terminal::size().map(|(w, h)| vec2(w, h))?;
@@ -49,18 +46,18 @@ pub fn reset(config: ShareableConfig) -> std::io::Result<()> {
     };
 
     let mut out = std::io::stdout();
-    crossterm::queue!(&mut out, EnableLineWrap)?;
 
     if config.get(|c| c.use_alt_screen) {
-        crossterm::queue!(&mut out, LeaveAlternateScreen)?;
+        crossterm::execute!(&mut out, LeaveAlternateScreen)?;
+        crossterm::execute!(&mut out, EnableLineWrap)?;
     }
-    if config.get(|c| c.hide_cursor) {
-        crossterm::queue!(&mut out, cursor::Show)?;
-    }
+
+    // always show the cursor
+    crossterm::execute!(&mut out, cursor::Show)?;
+
     if config.get(|c| c.mouse_capture) {
-        crossterm::queue!(&mut out, event::DisableMouseCapture)?
+        crossterm::execute!(&mut out, event::DisableMouseCapture)?
     }
-    out.flush()?;
 
     terminal::disable_raw_mode()
 }

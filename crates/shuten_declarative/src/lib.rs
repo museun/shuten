@@ -56,7 +56,8 @@ pub fn run<R>(config: Config, mut ui: impl FnMut(Term<'_>) -> R) -> std::io::Res
         application.finish();
 
         if terminal.is_in_alt_screen() {
-            terminal.paint(|canvas| {
+            terminal.paint(|mut canvas| {
+                canvas.erase();
                 application.paint(canvas);
             })?;
         }
