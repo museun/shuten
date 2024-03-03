@@ -6,7 +6,7 @@ use shuten::{
 
 use crate::{
     ui::{LayoutCtx, PaintCtx},
-    NoResponse, Widget,
+    NoResponse, Response, Ui, Widget, WidgetExt,
 };
 
 #[derive(Default, Debug)]
@@ -54,4 +54,12 @@ impl Widget for FilledWidget {
         ctx.canvas.rect(ctx.canvas.area(), self.props.cell);
         self.default_paint(ctx)
     }
+}
+
+pub fn filled<R>(ui: &Ui, bg: impl Into<Rgb>, show: impl FnOnce(&Ui) -> R) -> Response {
+    FilledWidget::show_children(ui, Filled::bg(bg), show)
+}
+
+pub fn filled_rect(ui: &Ui, bg: impl Into<Rgb>, min_size: Vec2f) -> Response {
+    FilledWidget::show(ui, Filled::bg(bg).min_size(min_size))
 }

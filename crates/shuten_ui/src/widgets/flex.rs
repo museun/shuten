@@ -1,6 +1,6 @@
 use shuten::geom::FlexFit;
 
-use crate::{NoResponse, Widget};
+use crate::{NoResponse, Response, Ui, Widget, WidgetExt};
 
 #[derive(Debug, Default)]
 pub struct Flex {
@@ -40,4 +40,16 @@ impl Widget for FlexWidget {
     fn flex(&self) -> (u16, FlexFit) {
         (self.props.flex, self.props.fit)
     }
+}
+
+pub fn flex<R>(ui: &Ui, factor: u16, show: impl FnOnce(&Ui) -> R) -> Response {
+    FlexWidget::show_children(ui, Flex::new(factor), show)
+}
+
+pub fn expanded<R>(ui: &Ui, show: impl FnOnce(&Ui) -> R) -> Response {
+    FlexWidget::show_children(ui, Flex::expanded(), show)
+}
+
+pub fn spacer(ui: &Ui) -> Response {
+    FlexWidget::show(ui, Flex::expanded())
 }

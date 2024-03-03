@@ -12,6 +12,9 @@ pub(crate) use erased::ErasedWidget;
 mod widget_ext;
 pub use widget_ext::WidgetExt;
 
+mod props_ext;
+pub use props_ext::PropsExt;
+
 pub type NoResponse = ();
 
 pub trait Props: std::fmt::Debug {}

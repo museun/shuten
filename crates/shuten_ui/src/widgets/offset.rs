@@ -1,6 +1,6 @@
 use shuten::geom::{Constraints, Pos2f, Vec2f};
 
-use crate::{ui::LayoutCtx, NoResponse, Widget};
+use crate::{ui::LayoutCtx, NoResponse, Response, Ui, Widget, WidgetExt};
 
 #[derive(Debug, Default)]
 pub struct OffsetWidget {
@@ -24,4 +24,8 @@ impl Widget for OffsetWidget {
         }
         size
     }
+}
+
+pub fn offset<R>(ui: &Ui, pos: Pos2f, show: impl FnOnce(&Ui) -> R) -> Response {
+    OffsetWidget::show_children(ui, pos, show)
 }

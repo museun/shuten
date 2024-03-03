@@ -9,7 +9,7 @@ use shuten::{
 use crate::{
     ext::DigitExt,
     ui::{LayoutCtx, PaintCtx},
-    NoResponse, Widget,
+    NoResponse, Response, Ui, Widget, WidgetExt as _,
 };
 
 // TODO support multi-line strings (Align2 and count '\n')
@@ -202,4 +202,8 @@ impl<T: Label + 'static> Widget for LabelWidget<T> {
     fn paint(&self, ctx: PaintCtx) {
         self.data.render(ctx.canvas)
     }
+}
+
+pub fn label<T: Label>(ui: &Ui, label: impl Into<Styled<T>>) -> Response {
+    LabelWidget::show(ui, label.into().into_static())
 }

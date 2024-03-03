@@ -31,6 +31,6 @@ impl Widget for MarginWidget {
     }
 }
 
-pub fn margin<R>(margin: Margin, show: impl FnOnce(&Ui) -> R) -> impl FnOnce(&Ui) -> Response {
-    move |ui| MarginWidget::show_children(ui, margin, show)
+pub fn margin<R>(ui: &Ui, margin: Margin, show: impl FnOnce(&Ui) -> R) -> Response {
+    MarginWidget::show_children(ui, margin, show)
 }

@@ -2,7 +2,7 @@ use shuten::geom::{
     vec2f, Constraints, CrossAxisAlignment, FlexFit, Flow, MainAxisAlignment, MainAxisSize, Vec2f,
 };
 
-use crate::{ui::LayoutCtx, NoResponse, Widget};
+use crate::{ui::LayoutCtx, NoResponse, Response, Ui, Widget, WidgetExt};
 
 #[derive(Copy, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub enum Direction {
@@ -265,22 +265,14 @@ fn spacing(
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+pub fn row<R>(ui: &Ui, show: impl FnOnce(&Ui) -> R) -> Response {
+    list(ui, List::row(), show)
+}
 
-    #[test]
-    fn spacing() {
-        for alignment in [
-            MainAxisAlignment::Start,
-            MainAxisAlignment::Center,
-            MainAxisAlignment::End,
-            MainAxisAlignment::SpaceAround,
-            MainAxisAlignment::SpaceBetween,
-            MainAxisAlignment::SpaceEvenly,
-        ] {
-            let (leading, between) = super::spacing(alignment, 5, 10.0, 30.0);
-            eprintln!("{alignment:?}: {leading:.2?} | {between:.2?}");
-        }
-    }
+pub fn column<R>(ui: &Ui, show: impl FnOnce(&Ui) -> R) -> Response {
+    list(ui, List::column(), show)
+}
+
+pub fn list<R>(ui: &Ui, list: List, show: impl FnOnce(&Ui) -> R) -> Response {
+    ListWidget::show_children(ui, list, show)
 }

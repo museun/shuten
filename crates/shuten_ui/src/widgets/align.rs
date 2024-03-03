@@ -1,7 +1,7 @@
 use shuten::geom::{vec2f, Align2, Constraints, Vec2f};
 
 use crate::ui::LayoutCtx;
-use crate::{NoResponse, Widget};
+use crate::{NoResponse, Response, Ui, Widget, WidgetExt};
 
 #[derive(Debug, Default)]
 pub struct AlignWidget {
@@ -31,4 +31,8 @@ impl Widget for AlignWidget {
         }
         size
     }
+}
+
+pub fn align<R>(ui: &Ui, align: Align2, show: impl FnOnce(&Ui) -> R) -> Response {
+    AlignWidget::show_children(ui, align, show)
 }

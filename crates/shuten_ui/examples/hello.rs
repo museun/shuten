@@ -4,19 +4,22 @@ use shuten::{style::Rgb, Config};
 
 use shuten_ui::{
     run,
-    widgets::{Slider, SliderStyle, SliderWidget},
-    WidgetExt,
+    widgets::{border, BorderStyle},
 };
 
 pub fn main() -> std::io::Result<()> {
     run(Config::default().fixed_timer(60.0), |ui| {
         ui.center(|ui| {
-            SliderWidget::show(
-                ui,
-                Slider::new(0.5, 0.0..=1.0)
-                    .style(SliderStyle::SLIM)
-                    .horizontal(),
-            );
+            border(ui, BorderStyle::ROUNDED, |ui| {
+                ui.label("asdf");
+            })
+
+            // SliderWidget::show(
+            //     ui,
+            //     Slider::new(0.5, 0.0..=1.0)
+            //         .style(SliderStyle::SLIM)
+            //         .horizontal(),
+            // );
         });
     })
 }

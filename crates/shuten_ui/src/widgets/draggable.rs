@@ -2,7 +2,7 @@ use shuten::geom::{Pos2f, Vec2f};
 
 use crate::{
     input::{Handled, MouseDrag},
-    Interest, Widget,
+    Interest, Response, Ui, Widget, WidgetExt,
 };
 
 #[derive(Copy, Clone, Debug, PartialEq)]
@@ -62,4 +62,8 @@ impl Widget for DraggableWidget {
 
         Handled::Bubble
     }
+}
+
+pub fn draggable<R>(ui: &Ui, show: impl FnOnce(&Ui) -> R) -> Response<DraggableResponse> {
+    DraggableWidget::show_children(ui, Draggable, show)
 }

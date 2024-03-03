@@ -5,7 +5,7 @@ use std::{
 
 use shuten::geom::{Constraints, Vec2f};
 
-use crate::{ui::LayoutCtx, Widget};
+use crate::{ui::LayoutCtx, Response, Ui, Widget, WidgetExt};
 
 pub trait Stateful: 'static + std::fmt::Debug {}
 impl<T: 'static + std::fmt::Debug> Stateful for T {}
@@ -113,4 +113,11 @@ impl<T: Stateful> Widget for StateWidget<T> {
     fn layout(&self, _: LayoutCtx, _: Constraints) -> Vec2f {
         Vec2f::ZERO
     }
+}
+
+pub fn state<T: Stateful>(
+    ui: &Ui,
+    default: impl FnOnce() -> T + 'static,
+) -> Response<StateResponse<T>> {
+    StateWidget::show(ui, State::new(default))
 }

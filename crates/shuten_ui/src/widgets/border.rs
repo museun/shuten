@@ -1,14 +1,12 @@
 use shuten::{
-    geom::{pos2, Constraints, Vec2f},
+    geom::{pos2, Margin},
     style::Color,
     Cell,
 };
 
-use crate::{
-    ui::{LayoutCtx, PaintCtx},
-    widgets::margin::margin,
-    NoResponse, Widget,
-};
+use crate::{ui::PaintCtx, NoResponse, Response, Ui, Widget, WidgetExt};
+
+use super::margin::margin;
 
 #[derive(Debug)]
 pub struct BorderStyle {
@@ -184,10 +182,6 @@ impl Widget for BorderWidget {
         self.props = props;
     }
 
-    fn layout(&self, ctx: LayoutCtx, input: Constraints) -> Vec2f {
-        todo!()
-    }
-
     fn paint(&self, ctx: PaintCtx) {
         let rect = ctx.canvas.area();
 
@@ -207,11 +201,9 @@ impl Widget for BorderWidget {
                 self.props.bottom,
             ),
         ] {
+            let cell = Cell::new(ch).fg(self.props.fg).bg(self.props.bg);
             for x in range {
-                ctx.canvas.put(
-                    pos2(x, y),
-                    Cell::new(ch).fg(self.props.fg).bg(self.props.bg),
-                );
+                ctx.canvas.put(pos2(x, y), cell);
             }
         }
 
@@ -219,11 +211,9 @@ impl Widget for BorderWidget {
             (left_top.y..=left_bottom.y, rect.left(), self.props.left),
             (right_top.y..=right_bottom.y, rect.right(), self.props.right),
         ] {
+            let cell = Cell::new(ch).fg(self.props.fg).bg(self.props.bg);
             for y in range {
-                ctx.canvas.put(
-                    pos2(x, y),
-                    Cell::new(ch).fg(self.props.fg).bg(self.props.bg),
-                );
+                ctx.canvas.put(pos2(x, y), cell);
             }
         }
 
@@ -233,14 +223,16 @@ impl Widget for BorderWidget {
             (right_bottom, self.props.right_bottom),
             (left_bottom, self.props.left_bottom),
         ] {
-            ctx.canvas.put(
-                pos,
-                Cell::new(cell) //
-                    .fg(self.props.fg)
-                    .bg(self.props.bg),
-            );
+            let cell = Cell::new(cell).fg(self.props.fg).bg(self.props.bg);
+            ctx.canvas.put(pos, cell);
         }
 
         self.default_paint(ctx)
     }
+}
+
+pub fn border<R>(ui: &Ui, style: BorderStyle, children: impl FnOnce(&Ui) -> R) -> Response {
+    BorderWidget::show_children(ui, style, |ui| {
+        margin(ui, Margin::same(1), children);
+    })
 }

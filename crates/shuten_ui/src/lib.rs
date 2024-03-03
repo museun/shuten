@@ -10,15 +10,13 @@ pub use interest::Interest;
 pub(crate) mod debug_fmt;
 
 mod node;
-
 pub use node::{LayoutNode, Node, WidgetId};
 
 pub mod input;
 
 mod widget;
-
 use widget::ErasedWidget;
-pub use widget::{NoResponse, Widget, WidgetExt};
+pub use widget::{NoResponse, PropsExt, Widget, WidgetExt};
 
 pub mod widgets;
 
@@ -32,6 +30,7 @@ pub fn run(config: Config, mut app: impl FnMut(&Ui)) -> std::io::Result<()> {
         if ev.is_quit() {
             break;
         }
+
         if !terminal.is_in_alt_screen() {
             continue;
         }
