@@ -1,6 +1,8 @@
+use std::collections::VecDeque;
+
 use crate::{
     geom::{vec2, Rect},
-    Canvas, Cell, Queue,
+    Canvas, Cell,
 };
 
 mod renderer;
@@ -47,6 +49,44 @@ impl<const N: usize> StatsWindow<N> for Queue<usize, N> {
             maximum,
             average: avg,
         }
+    }
+}
+
+#[derive(Default, Debug, PartialEq)]
+pub struct Queue<T, const N: usize> {
+    queue: VecDeque<T>,
+}
+
+impl<const N: usize, T> Queue<T, N> {
+    pub fn new() -> Self {
+        assert!(N > 0, "queue cannot be zero-sized");
+        Self {
+            queue: VecDeque::new(),
+        }
+    }
+
+    fn push(&mut self, item: T) {
+        while self.queue.len() >= N {
+            self.queue.pop_front();
+        }
+        self.queue.push_back(item)
+    }
+
+    fn last_mut(&mut self) -> Option<&mut T> {
+        self.queue.back_mut()
+    }
+
+    fn len(&self) -> usize {
+        self.queue.len()
+    }
+}
+
+impl<'a, const N: usize, T> IntoIterator for &'a Queue<T, N> {
+    type Item = &'a T;
+    type IntoIter = std::collections::vec_deque::Iter<'a, T>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.queue.iter()
     }
 }
 

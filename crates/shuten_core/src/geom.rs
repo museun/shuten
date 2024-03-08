@@ -40,6 +40,8 @@ pub use flex::{
 mod dimension;
 pub use dimension::{Dimension, Dimension2};
 
+pub mod gradient;
+
 /// How should a [`Rect`] be resized?
 ///
 /// You'll add/subtract this type to a [`Rect`]

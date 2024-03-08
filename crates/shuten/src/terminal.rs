@@ -39,6 +39,7 @@ pub struct Terminal {
     mouse_state: MouseState,
     timer_state: TimerState,
     start: Instant,
+    quit: bool,
     out: std::io::BufWriter<std::io::Stdout>,
     _guard: helpers::Guard,
 }
@@ -58,6 +59,7 @@ impl Terminal {
             mouse_state: MouseState::default(),
             timer_state: TimerState::default(),
             start: Instant::now(),
+            quit: false,
             config,
             _guard,
         })
@@ -204,6 +206,10 @@ impl Terminal {
     /// Wait for the _next_ event
     pub fn wait_for_next_event(&mut self) -> std::io::Result<Event> {
         loop {
+            if self.quit {
+                return Ok(Event::Quit);
+            }
+
             match &mut self.timer.kind {
                 TimerKind::Fixed(t) if self.timer_state == TimerState::Between => {
                     if t.consume() {
@@ -235,6 +241,11 @@ impl Terminal {
 
 /// Terminal mode helpers
 impl Terminal {
+    /// Request that the Terminal should stop
+    pub fn signal_quit(&mut self) {
+        self.quit = true;
+    }
+
     /// Set the title of the terminal
     pub fn set_title(&self, title: &str) -> std::io::Result<()> {
         self.immediate(|mut p| p.set_title(title))

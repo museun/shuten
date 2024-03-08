@@ -77,3 +77,10 @@ impl From<Pos2f> for Pos2 {
         }
     }
 }
+
+impl std::ops::Neg for Pos2f {
+    type Output = Self;
+    fn neg(self) -> Self::Output {
+        pos2f(-self.x, -self.y)
+    }
+}

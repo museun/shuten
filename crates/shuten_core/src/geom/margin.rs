@@ -10,6 +10,12 @@ pub struct Margin {
     pub bottom: u16,
 }
 
+impl From<(u16, u16)> for Margin {
+    fn from((x, y): (u16, u16)) -> Self {
+        Self::symmetric(x, y)
+    }
+}
+
 impl From<u16> for Margin {
     fn from(value: u16) -> Self {
         Self::same(value)

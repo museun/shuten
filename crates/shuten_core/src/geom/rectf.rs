@@ -101,8 +101,33 @@ impl Rectf {
         (self.max - self.min).to_vec2()
     }
 
+    pub fn union(&self, other: Self) -> Self {
+        Self {
+            min: self.min.min(other.min),
+            max: self.max.max(other.max),
+        }
+    }
+
+    pub fn intersect(&self, other: Self) -> Self {
+        Self {
+            min: self.min.max(other.min),
+            max: self.max.min(other.max),
+        }
+    }
+
+    pub fn intersects(&self, other: Self) -> bool {
+        self.min.x <= other.max.x
+            && other.min.x <= self.max.x
+            && self.min.y <= other.max.y
+            && other.min.y <= self.max.y
+    }
+
+    pub fn contains_rect(&self, other: Self) -> bool {
+        self.contains(other.min) && self.contains(other.max)
+    }
+
     pub fn contains(&self, pos: Pos2f) -> bool {
-        self.min.x <= pos.x && pos.x < self.max.x && self.min.y <= pos.y && pos.y < self.max.y
+        self.min.x <= pos.x && pos.x <= self.max.x && self.min.y <= pos.y && pos.y <= self.max.y
     }
 
     pub fn set_pos(&mut self, pos: Pos2f) {
@@ -117,10 +142,8 @@ impl Rectf {
         Self::from_min_max(min, self.max)
     }
 
-    pub fn constrain(self, other: Self) -> Self {
-        let min = self.min.max(other.min);
-        let max = self.max.min(other.max);
-        Self::from_min_max(min, max)
+    pub fn translate(self, size: Vec2f) -> Self {
+        Self::from_min_size(self.min + size, self.size())
     }
 }
 

@@ -9,10 +9,10 @@ pub enum CellAttr {
 /// Cells are written to the [`Surface`](crate::Surface) and interpreted by a [`Context`](crate::Context) and used by a [`Canvas`](crate::Canvas)
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub struct Cell {
-    pub(crate) char: char,
-    pub(crate) fg: Color,
-    pub(crate) bg: Color,
-    pub(crate) attr: CellAttr,
+    pub char: char,
+    pub fg: Color,
+    pub bg: Color,
+    pub attr: CellAttr,
 }
 
 impl Default for Cell {

@@ -9,6 +9,3 @@ pub use shuten_core::*;
 
 mod config;
 pub use config::{Config, ShareableConfig};
-
-#[doc(inline)]
-pub use shuten_core::Queue;

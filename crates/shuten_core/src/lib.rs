@@ -8,6 +8,3 @@ pub use context::Context;
 
 mod surface;
 pub use surface::{Canvas, Cell, Surface};
-
-mod queue;
-pub use queue::Queue;

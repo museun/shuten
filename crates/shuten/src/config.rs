@@ -92,6 +92,7 @@ impl Config {
     }
 }
 
+/// A [`Config`] that can be shared between threads
 #[derive(Clone)]
 pub struct ShareableConfig {
     inner: Arc<Mutex<Config>>,

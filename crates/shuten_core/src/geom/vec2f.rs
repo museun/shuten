@@ -45,6 +45,10 @@ impl Vec2f {
         self.x.is_finite() && self.y.is_finite()
     }
 
+    pub const fn swap(self) -> Self {
+        vec2f(self.y, self.x)
+    }
+
     pub const fn to_pos2(&self) -> Pos2f {
         pos2f(self.x, self.y)
     }
@@ -67,6 +71,12 @@ impl std::ops::Sub for Vec2f {
     type Output = Self;
     fn sub(self, rhs: Self) -> Self::Output {
         vec2f(self.x - rhs.x, self.y - rhs.y)
+    }
+}
+
+impl std::ops::SubAssign for Vec2f {
+    fn sub_assign(&mut self, rhs: Self) {
+        *self = *self - rhs
     }
 }
 
@@ -105,7 +115,6 @@ impl std::ops::Div<f32> for Vec2f {
 
 impl std::ops::Neg for Vec2f {
     type Output = Self;
-
     fn neg(self) -> Self::Output {
         vec2f(-self.x, -self.y)
     }
