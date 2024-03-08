@@ -127,7 +127,7 @@ impl Rectf {
     }
 
     pub fn contains(&self, pos: Pos2f) -> bool {
-        self.min.x <= pos.x && pos.x <= self.max.x && self.min.y <= pos.y && pos.y <= self.max.y
+        self.min.x <= pos.x && pos.x < self.max.x && self.min.y <= pos.y && pos.y < self.max.y
     }
 
     pub fn set_pos(&mut self, pos: Pos2f) {
