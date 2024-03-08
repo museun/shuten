@@ -16,6 +16,12 @@ pub struct Gradient {
 }
 
 impl Gradient {
+    pub fn generate(&self, theta: f32) -> Rgb {
+        gradient(theta, self.offset, self.amp, self.freq, self.phase)
+    }
+}
+
+impl Gradient {
     pub const RAINBOW1: Self = Self {
         offset: vec3(0.5, 0.5, 0.5),
         amp: vec3(0.5, 0.5, 0.5),
