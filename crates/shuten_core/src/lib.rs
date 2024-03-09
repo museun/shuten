@@ -8,3 +8,5 @@ pub use context::Context;
 
 mod surface;
 pub use surface::{Canvas, Cell, Surface};
+
+pub mod label;
