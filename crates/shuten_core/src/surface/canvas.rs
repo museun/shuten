@@ -1,6 +1,7 @@
 use super::{pos_to_index, Surface};
 use crate::{
     geom::{pos2, Pos2, Rect},
+    label::{Label, Styled},
     style::Color,
     Cell,
 };
@@ -89,6 +90,16 @@ impl<'a> Canvas<'a> {
         for pos in rect.indices() {
             self.put(pos, cell)
         }
+    }
+
+    pub fn label<L: Label>(&mut self, pos: Pos2, label: impl Into<Styled<L>>) {
+        let mut canvas = self.crop(Rect::from_min_max(
+            self.area().left_top() + pos,
+            self.area().right_bottom(),
+        ));
+
+        let label = label.into();
+        label.render(&mut canvas);
     }
 
     // TODO this
