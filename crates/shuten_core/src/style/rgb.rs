@@ -1,4 +1,4 @@
-use std::str::FromStr;
+use std::{f32::consts::PI, str::FromStr};
 
 use super::Hsl;
 
@@ -214,6 +214,16 @@ impl Rgb {
     /// Lighten this color by a ratio (in the range `0.0 ..= 1.0`)
     pub fn lighten(&self, ratio: f32) -> Self {
         Hsl::from(self).lighten(ratio).into()
+    }
+
+    /// Create an RGB from the phase of 3 sine waves
+    pub fn sine_color(phase: f32) -> Self {
+        let h = phase * ((1.0 + 5.0_f32.sqrt()) / 2.0);
+        let h = (h + 0.5) * -1.0;
+        let r = (PI * h).sin();
+        let g = (PI * (h + 0.3)).sin();
+        let b = (PI * (h + 0.6)).sin();
+        Self::from_float([r * r, g * g, b * b])
     }
 }
 
