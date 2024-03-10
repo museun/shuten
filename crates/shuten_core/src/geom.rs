@@ -175,6 +175,10 @@ impl Num for f32 {
     const ONE: Self = 1.0;
 }
 
+impl Num for f64 {
+    const ONE: Self = 1.0;
+}
+
 /// Divide `d` by `n` and round up
 pub fn div_round<N>(n: N, d: N) -> N
 where

@@ -1,4 +1,4 @@
-use super::{offset, pos2, Offset, Pos2};
+use super::{offset, pos2, Offset, Pos2, Vec2f};
 
 /// A two dimensional vector
 #[derive(Copy, Clone, Default, PartialEq, Eq, Hash, PartialOrd, Ord)]
@@ -140,5 +140,14 @@ impl std::ops::MulAssign for Vec2 {
 impl From<(u16, u16)> for Vec2 {
     fn from((x, y): (u16, u16)) -> Self {
         vec2(x, y)
+    }
+}
+
+impl From<Vec2f> for Vec2 {
+    fn from(value: Vec2f) -> Self {
+        Self {
+            x: u16::try_from(value.x.ceil() as i16).unwrap_or(0),
+            y: u16::try_from(value.y.ceil() as i16).unwrap_or(0),
+        }
     }
 }
