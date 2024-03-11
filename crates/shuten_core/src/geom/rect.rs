@@ -189,10 +189,6 @@ impl Rect {
 
     /// The area that covered by both rects
     pub fn intersect(&self, other: Self) -> Self {
-        if !self.intersects(other) {
-            return Self::ZERO;
-        }
-
         Self::from_min_max(self.min.max(other.min), self.max.min(other.max))
     }
 
@@ -211,7 +207,7 @@ impl Rect {
 
     /// The right edge of the rectangle
     pub const fn right(&self) -> u16 {
-        self.max.x
+        self.max.x.saturating_sub(1)
     }
 
     /// The top edge of the rectangle
@@ -221,7 +217,7 @@ impl Rect {
 
     /// The bottom edge of the rectangle
     pub const fn bottom(&self) -> u16 {
-        self.max.y
+        self.max.y.saturating_sub(1)
     }
 
     /// The center point of the rectangle
@@ -368,7 +364,7 @@ impl Rect {
         let start = self.left_top();
         let end = self.right_bottom();
         let (sx, sy) = (start.x, start.y);
-        let (ex, ey) = (end.x.max(sx), end.y.max(sy));
+        let (ex, ey) = (end.x.max(sx + 1), end.y.max(sy + 1));
         (sy..=ey).flat_map(move |y| (sx..=ex).map(move |x| pos2(x, y)))
     }
 }

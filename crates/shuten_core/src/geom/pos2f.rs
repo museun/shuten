@@ -22,10 +22,6 @@ impl Default for Pos2f {
 impl Pos2f {
     pub const ZERO: Self = pos2f(0.0, 0.0);
 
-    pub const fn new(x: f32, y: f32) -> Self {
-        Self { x, y }
-    }
-
     pub const fn to_vec2(&self) -> Vec2f {
         vec2f(self.x, self.y)
     }
