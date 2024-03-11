@@ -87,6 +87,10 @@ impl<'a> Canvas<'a> {
 
     /// Fill the specified [`Rect`] with the provided [`Cell`]
     pub fn rect(&mut self, rect: Rect, cell: Cell) {
+        if rect == Rect::ZERO {
+            return;
+        }
+
         for pos in rect.indices() {
             self.put(pos, cell)
         }
@@ -100,29 +104,6 @@ impl<'a> Canvas<'a> {
 
         let label = label.into();
         label.render(&mut canvas);
-    }
-
-    // TODO this
-    #[allow(dead_code)]
-    fn line(&mut self, start: Pos2, end: Pos2, cell: Cell) {
-        let (start, end) = (start.min(end), start.max(end));
-
-        let vertical = start.y..end.y;
-        let horizontal = start.x..end.x;
-
-        match () {
-            _ if vertical.is_empty() => {
-                for x in start.x..=end.x {
-                    self.put(pos2(x, start.y), cell)
-                }
-            }
-            _ if horizontal.is_empty() => {
-                for y in start.y..=end.y {
-                    self.put(pos2(start.x, y), cell)
-                }
-            }
-            _ => {}
-        }
     }
 
     /// Tries to set the [`foreground`](Color) and [`background`](Color) at the specified [`point`](Pos2)
