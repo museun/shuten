@@ -11,3 +11,5 @@ pub use hsl::Hsl;
 
 mod attribute;
 pub use attribute::Attribute;
+
+pub mod rgba;
