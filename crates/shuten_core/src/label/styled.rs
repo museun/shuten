@@ -14,7 +14,8 @@ pub struct Styled<T> {
     fg: Color,
     bg: Color,
     attr: Option<Attribute>,
-    align: Align,
+    halign: Align,
+    valign: Align,
 }
 
 impl<T: Label> From<T> for Styled<T> {
@@ -30,7 +31,8 @@ impl<T: Label> Styled<T> {
             fg: Color::Reset,
             bg: Color::Reuse,
             attr: None,
-            align: Align::Min,
+            halign: Align::Min,
+            valign: Align::Min,
         }
     }
 
@@ -49,7 +51,8 @@ impl<T: Label> Styled<T> {
             fg: self.fg,
             bg: self.bg,
             attr: self.attr,
-            align: self.align,
+            halign: self.halign,
+            valign: self.valign,
         }
     }
 
@@ -68,22 +71,28 @@ impl<T: Label> Styled<T> {
         self
     }
 
-    pub const fn align(mut self, align: Align) -> Self {
-        self.align = align;
+    pub const fn h_align(mut self, align: Align) -> Self {
+        self.halign = align;
         self
     }
 
-    // TODO vertical-align
+    pub const fn v_align(mut self, align: Align) -> Self {
+        self.valign = align;
+        self
+    }
+
     pub fn render(&self, canvas: &mut Canvas) -> Vec2 {
         let area = canvas.area();
 
-        let offset = match self.align {
+        let x_offset = match self.halign {
             Align::Min => 0,
             Align::Center => (area.width() / 2).saturating_sub(self.item.width() / 2),
             Align::Max => area.width().saturating_sub(self.item.width()),
         };
 
-        let mut start = area.left_top() + pos2(offset, 0);
+        // TODO y_offset
+
+        let mut start = area.left_top() + pos2(x_offset, 0);
         for ch in self.item.chars() {
             if start.x > area.right() {
                 break;
